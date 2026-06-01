@@ -1,4 +1,5 @@
 (function () {
+  console.log("TRUSTKIT VERSION 2 OK");
   const script = document.currentScript;
   const apiBase = new URL(script.src).origin;
 
