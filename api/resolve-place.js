@@ -16,9 +16,13 @@ export default async function handler(req, res) {
     if (extracted.placeId) {
       const place = await getPlaceDetails(extracted.placeId);
       candidates = [place];
-    } else if (extracted.query) {
-      candidates = await searchPlaces(extracted.query);
-    }
+    } else {
+        return res.status(422).json({
+          error: "No reliable Place ID found in this Google Maps URL",
+          message: "Ce lien ne contient pas de Place ID fiable. Utilise le bouton Partager directement depuis la fiche Google Maps, ou passe par la recherche manuelle.",
+          extracted
+        });
+      }
 
     return res.status(200).json({
       resolvedUrl,
