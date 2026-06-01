@@ -528,7 +528,19 @@
   );
 
   const data = await response.json();
-  const places = data.places || [];
+
+if (!response.ok) {
+  results.innerHTML = `
+    <div class="empty">
+      ${escapeHtml(data.message || data.error || "Lien Google Maps non exploitable.")}
+      <br><br>
+      Essaie de copier le lien depuis : <strong>Google Maps → fiche → Partager → Copier le lien</strong>.
+    </div>
+  `;
+  return;
+}
+
+const places = data.places || [];
 
   if (!places.length) {
     results.innerHTML = `
