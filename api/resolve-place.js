@@ -8,26 +8,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const resolvedUrl = await resolveUrl(maps_url);
-    const extracted = extractFromMapsUrl(resolvedUrl);
+    const decoded = decodeURIComponent(maps_url);
+    const extracted = extractGoogleMapsData(decoded);
 
-    let candidates = [];
+    let places = [];
 
     if (extracted.placeId) {
       const place = await getPlaceDetails(extracted.placeId);
-      candidates = [place];
-    } else {
-        return res.status(422).json({
-          error: "No reliable Place ID found in this Google Maps URL",
-          message: "Ce lien ne contient pas de Place ID fiable. Utilise le bouton Partager directement depuis la fiche Google Maps, ou passe par la recherche manuelle.",
-          extracted
-        });
-      }
+      if (place) places.push(place);
+    }
+
+    if (!places.length && extracted.name) {
+      places = await searchPlacesNew(extracted.name);
+    }
+
+    if (!places.length && extracted.name) {
+      places = await searchPlacesLegacy(extracted.name);
+    }
 
     return res.status(200).json({
-      resolvedUrl,
       extracted,
-      places: candidates.filter(Boolean)
+      places
     });
   } catch (error) {
     return res.status(500).json({
@@ -37,31 +38,25 @@ export default async function handler(req, res) {
   }
 }
 
-async function resolveUrl(url) {
-  const response = await fetch(url, {
-    redirect: "follow",
-    headers: {
-      "User-Agent": "Mozilla/5.0 TrustKitBot"
-    }
-  });
-
-  return response.url || url;
-}
-
-function extractFromMapsUrl(url) {
-  const decoded = decodeURIComponent(url);
+function extractGoogleMapsData(raw) {
+  const decoded = decodeURIComponent(raw);
 
   const placeIdMatch = decoded.match(/ChI[a-zA-Z0-9_-]+/);
 
-  const placeMatch = decoded.match(/\/place\/([^/@?]+)/);
-  const searchMatch = decoded.match(/\/search\/([^/@?]+)/);
+  const embedNameMatch = decoded.match(/!2s([^!]+)/);
+  const placeUrlMatch = decoded.match(/\/place\/([^/@?]+)/);
+  const searchUrlMatch = decoded.match(/\/search\/([^/@?]+)/);
 
-  let query = "";
+  const googleIdMatch = decoded.match(/0x[a-fA-F0-9]+:0x[a-fA-F0-9]+/);
 
-  if (placeMatch?.[1]) {
-    query = placeMatch[1].replaceAll("+", " ").trim();
-  } else if (searchMatch?.[1]) {
-    query = searchMatch[1]
+  let name = "";
+
+  if (embedNameMatch?.[1]) {
+    name = embedNameMatch[1].replaceAll("+", " ").trim();
+  } else if (placeUrlMatch?.[1]) {
+    name = placeUrlMatch[1].replaceAll("+", " ").trim();
+  } else if (searchUrlMatch?.[1]) {
+    name = searchUrlMatch[1]
       .replaceAll("+", " ")
       .replace(/\bAvis\b/gi, "")
       .trim();
@@ -69,7 +64,8 @@ function extractFromMapsUrl(url) {
 
   return {
     placeId: placeIdMatch?.[0] || "",
-    query
+    googleInternalId: googleIdMatch?.[0] || "",
+    name
   };
 }
 
@@ -89,7 +85,7 @@ async function getPlaceDetails(placeId) {
   return await response.json();
 }
 
-async function searchPlaces(query) {
+async function searchPlacesNew(query) {
   const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
@@ -108,4 +104,29 @@ async function searchPlaces(query) {
 
   const data = await response.json();
   return data.places || [];
+}
+
+async function searchPlacesLegacy(query) {
+  const url =
+    "https://maps.googleapis.com/maps/api/place/findplacefromtext/json" +
+    `?input=${encodeURIComponent(query)}` +
+    "&inputtype=textquery" +
+    "&fields=place_id,name,formatted_address,rating,user_ratings_total" +
+    "&language=fr" +
+    `&key=${process.env.GOOGLE_API_KEY}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!data.candidates) return [];
+
+  return data.candidates.map((place) => ({
+    id: place.place_id,
+    displayName: {
+      text: place.name
+    },
+    formattedAddress: place.formatted_address || "Adresse non publique",
+    rating: place.rating,
+    userRatingCount: place.user_ratings_total
+  }));
 }
