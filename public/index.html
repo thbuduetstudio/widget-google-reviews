@@ -33,9 +33,7 @@
       margin: auto;
     }
 
-    .hero {
-      margin-bottom: 34px;
-    }
+    .hero { margin-bottom: 34px; }
 
     .eyebrow {
       display: inline-flex;
@@ -108,13 +106,8 @@
       color: white;
     }
 
-    .tab-panel {
-      display: none;
-    }
-
-    .tab-panel.active {
-      display: block;
-    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     label {
       display: block;
@@ -141,9 +134,7 @@
       box-shadow: 0 0 0 4px rgba(113,114,84,.12);
     }
 
-    .field {
-      margin-bottom: 16px;
-    }
+    .field { margin-bottom: 16px; }
 
     .actions {
       display: flex;
@@ -173,9 +164,7 @@
       color: #1e1e1e;
     }
 
-    button.accent {
-      background: var(--accent);
-    }
+    button.accent { background: var(--accent); }
 
     .results {
       display: grid;
@@ -258,31 +247,25 @@
       line-height: 1.55;
     }
 
-    .preview {
-      margin-top: 22px;
-    }
+    .preview { margin-top: 22px; }
 
-    .selected-box {
-      margin-top: 16px;
+    gmp-place-autocomplete {
+      width: 100%;
+      display: block;
+      border-radius: 16px;
+      overflow: hidden;
     }
 
     @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+      .grid { grid-template-columns: 1fr; }
 
       .panel {
         border-radius: 24px;
         padding: 20px;
       }
 
-      .tabs {
-        border-radius: 22px;
-      }
-
-      .tab {
-        flex: 1 1 100%;
-      }
+      .tabs { border-radius: 22px; }
+      .tab { flex: 1 1 100%; }
     }
   </style>
 </head>
@@ -335,7 +318,7 @@
 
             <div class="field">
               <label>Recherche Google Maps avancée</label>
-              <input id="googleAutocomplete" placeholder="Tape le nom exact de la fiche Google" />
+              <input id="googleAutocomplete" placeholder="Chargement du champ Google..." />
             </div>
 
             <div id="advancedResult" class="empty">
@@ -540,6 +523,10 @@
       refreshOutput();
     }
 
+    function getPlaceId(place) {
+      return place?.id || place?.place_id || "";
+    }
+
     function updateSelectedInfo() {
       const name = selectedPlace.displayName?.text || selectedPlace.name || "Sans nom";
       const address = selectedPlace.formattedAddress || selectedPlace.formatted_address || "Adresse non publique";
@@ -552,7 +539,7 @@
         <strong>${escapeHtml(name)}</strong>
         <div class="muted">${escapeHtml(address)}</div>
         <div class="muted">${rating} ${total ? "— " + total : ""}</div>
-        <div class="muted" style="margin-top:8px;">${escapeHtml(selectedPlace.id || selectedPlace.place_id || "")}</div>
+        <div class="muted" style="margin-top:8px;">${escapeHtml(getPlaceId(selectedPlace))}</div>
       `;
     }
 
@@ -608,7 +595,7 @@
       preview.innerHTML = `
         <div
           data-google-reviews
-          data-place-id="${selectedPlace.id || selectedPlace.place_id}"
+          data-place-id="${getPlaceId(selectedPlace)}"
           data-accent-color="${document.getElementById("accentColor").value}"
           data-bg-color="${document.getElementById("bgColor").value}"
           data-text-color="${document.getElementById("textColor").value}"
@@ -630,7 +617,7 @@
 
       return `<div
   data-google-reviews
-  data-place-id="${selectedPlace.id || selectedPlace.place_id}"
+  data-place-id="${getPlaceId(selectedPlace)}"
   data-accent-color="${document.getElementById("accentColor").value}"
   data-bg-color="${document.getElementById("bgColor").value}"
   data-text-color="${document.getElementById("textColor").value}"
@@ -668,7 +655,7 @@
 
         const script = document.createElement("script");
         script.src =
-          `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&libraries=places&language=fr&region=FR&callback=initGoogleAutocomplete`;
+          `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&v=weekly&libraries=places&language=fr&region=FR&callback=initGoogleAutocomplete`;
         script.async = true;
         script.defer = true;
 
@@ -678,51 +665,86 @@
       }
     }
 
-    function initGoogleAutocomplete() {
+    async function initGoogleAutocomplete() {
       const input = document.getElementById("googleAutocomplete");
       const result = document.getElementById("advancedResult");
 
-      if (!input || !window.google?.maps?.places) {
-        result.innerHTML = "Google Autocomplete n’est pas disponible.";
+      if (!window.google?.maps?.importLibrary) {
+        result.innerHTML = "Google Maps JavaScript API n’est pas disponible.";
         return;
       }
 
-      const autocomplete = new google.maps.places.Autocomplete(input, {
-        fields: ["place_id", "name", "formatted_address", "rating", "user_ratings_total", "url"],
-        componentRestrictions: { country: "fr" }
-      });
+      try {
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
+        input.style.display = "none";
 
-        if (!place.place_id) {
-          result.innerHTML = "Aucun Place ID récupéré. Essaie une autre suggestion.";
-          return;
-        }
+        const autocompleteElement = new PlaceAutocompleteElement({
+          includedRegionCodes: ["fr"]
+        });
 
-        const formattedPlace = {
-          id: place.place_id,
-          displayName: { text: place.name || "Sans nom" },
-          formattedAddress: place.formatted_address || "Adresse non publique",
-          rating: place.rating,
-          userRatingCount: place.user_ratings_total,
-          googleMapsUri: place.url
-        };
+        autocompleteElement.setAttribute(
+          "placeholder",
+          "Tape le nom exact de la fiche Google"
+        );
+
+        autocompleteElement.style.display = "block";
+        autocompleteElement.style.width = "100%";
+
+        input.parentNode.appendChild(autocompleteElement);
 
         result.innerHTML = `
-          <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
-          <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
-          <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
-          <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
-          <div class="actions">
-            <button class="accent" onclick='selectPlaceObject(${JSON.stringify(formattedPlace).replaceAll("'", "&apos;")})'>
-              Valider cette fiche
-            </button>
+          <div class="empty">
+            Tape le nom de l’établissement dans le champ Google ci-dessus,
+            puis sélectionne une suggestion.
           </div>
         `;
 
-        selectPlaceObject(formattedPlace);
-      });
+        autocompleteElement.addEventListener("gmp-select", async (event) => {
+          const place = event.placePrediction.toPlace();
+
+          await place.fetchFields({
+            fields: [
+              "id",
+              "displayName",
+              "formattedAddress",
+              "rating",
+              "userRatingCount",
+              "googleMapsURI"
+            ]
+          });
+
+          const placeData = place.toJSON();
+
+          const formattedPlace = {
+            id: placeData.id,
+            displayName: {
+              text: placeData.displayName || "Sans nom"
+            },
+            formattedAddress: placeData.formattedAddress || "Adresse non publique",
+            rating: placeData.rating,
+            userRatingCount: placeData.userRatingCount,
+            googleMapsUri: placeData.googleMapsURI
+          };
+
+          result.innerHTML = `
+            <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
+            <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
+            <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
+            <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
+          `;
+
+          selectPlaceObject(formattedPlace);
+        });
+      } catch (error) {
+        result.innerHTML = `
+          <div class="empty">
+            Impossible d’initialiser la recherche avancée.
+            <br><br>
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
     }
 
     function normalizeHex(color) {
