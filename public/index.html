@@ -243,7 +243,7 @@
       <h1>Générateur de widget Google Reviews.</h1>
       <p class="lead">
         Recherche une fiche Google, valide le bon établissement, récupère les couleurs du site cible,
-        ajuste le style, puis copie le code Carrd prêt à intégrer.
+        ajuste le style, puis copie le code d’intégration.
       </p>
     </section>
 
@@ -259,8 +259,10 @@
 
           <div class="field">
             <label>Lien Google Maps de la fiche</label>
-            <input id="mapsUrl" placeholder="Colle ici le lien Google Maps de la fiche" />
+            <input id="mapsUrl" placeholder="Colle le lien de partage Google Maps de la fiche" />
           </div>
+          
+          <button onclick="resolveMapsUrl()">Analyser le lien Google Maps</button>
 
           <div class="field">
             <label>Ville / adresse pour préciser</label>
@@ -318,7 +320,7 @@
         </div>
 
         <div class="panel">
-          <h2>4. Code Carrd</h2>
+          <h2>4. Code d'intégration</h2>
           <div id="code" class="code">Valide d’abord un établissement.</div>
 
           <div class="actions">
@@ -509,6 +511,51 @@
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
     }
+
+    async function resolveMapsUrl() {
+  const mapsUrl = document.getElementById("mapsUrl").value.trim();
+  const results = document.getElementById("results");
+
+  if (!mapsUrl) {
+    results.innerHTML = `<div class="empty">Colle d’abord un lien Google Maps.</div>`;
+    return;
+  }
+
+  results.innerHTML = `<div class="empty">Analyse du lien Google Maps...</div>`;
+
+  const response = await fetch(
+    `/api/resolve-place?maps_url=${encodeURIComponent(mapsUrl)}`
+  );
+
+  const data = await response.json();
+  const places = data.places || [];
+
+  if (!places.length) {
+    results.innerHTML = `
+      <div class="empty">
+        Aucun établissement trouvé depuis ce lien. Essaie l’onglet recherche manuelle.
+      </div>
+    `;
+    return;
+  }
+
+  window.__places = places;
+
+  results.innerHTML = places.map((place, index) => {
+    const name = place.displayName?.text || "Sans nom";
+    const address = place.formattedAddress || "Adresse non publique";
+    const rating = place.rating ? `⭐ ${place.rating} / 5` : "";
+    const total = place.userRatingCount ? `${place.userRatingCount} avis` : "";
+
+    return `
+      <div class="result" onclick="selectPlace(${index})">
+        <strong>${escapeHtml(name)}</strong>
+        <div class="muted">${escapeHtml(address)}</div>
+        <div class="muted">${rating} ${total ? "— " + total : ""}</div>
+      </div>
+    `;
+  }).join("");
+}
   </script>
 </body>
 </html>
