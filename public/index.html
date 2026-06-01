@@ -655,7 +655,7 @@
 
         const script = document.createElement("script");
         script.src =
-          `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&v=weekly&libraries=places&language=fr&region=FR&callback=initGoogleAutocomplete`;
+         `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&v=weekly&libraries=places&language=fr&region=FR&loading=async&callback=initGoogleAutocomplete`;
         script.async = true;
         script.defer = true;
 
@@ -715,7 +715,27 @@
           });
 
         autocompleteElement.addEventListener("gmp-select", async (event) => {
-          const place = event.placePrediction.toPlace();
+  console.log("TrustKit gmp-select event:", event);
+
+  const prediction =
+    event.placePrediction ||
+    event.detail?.placePrediction ||
+    event.detail?.prediction ||
+    null;
+
+  if (!prediction) {
+    result.innerHTML = `
+      <div class="empty">
+        Suggestion sélectionnée, mais impossible de lire la prédiction Google.
+        <br><br>
+        Regarde la console pour l'objet complet.
+      </div>
+    `;
+    console.error("TrustKit: no prediction found in event", event);
+    return;
+  }
+
+  const place = prediction.toPlace();
 
           await place.fetchFields({
             fields: [
