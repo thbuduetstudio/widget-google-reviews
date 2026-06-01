@@ -8,7 +8,7 @@
   <style>
     :root {
       --bg: #f5f2ec;
-      --card: rgba(255,255,255,.82);
+      --card: rgba(255,255,255,.84);
       --text: #1e1e1e;
       --muted: #6f6a61;
       --accent: #717254;
@@ -29,7 +29,7 @@
     }
 
     main {
-      max-width: 1120px;
+      max-width: 1160px;
       margin: auto;
     }
 
@@ -43,7 +43,7 @@
       border-radius: 999px;
       background: rgba(113,114,84,.12);
       color: var(--accent);
-      font-weight: 700;
+      font-weight: 800;
       font-size: 13px;
       margin-bottom: 16px;
     }
@@ -55,12 +55,24 @@
       letter-spacing: -0.05em;
     }
 
+    h2 {
+      margin-top: 0;
+      letter-spacing: -0.03em;
+    }
+
     .lead {
-      max-width: 680px;
+      max-width: 760px;
       font-size: 18px;
       line-height: 1.6;
       color: var(--muted);
       margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 24px;
+      align-items: start;
     }
 
     .panel {
@@ -73,11 +85,35 @@
       margin-bottom: 24px;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1.4fr .8fr;
-      gap: 24px;
-      align-items: start;
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      padding: 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.05);
+    }
+
+    .tab {
+      background: transparent;
+      color: #1e1e1e;
+      box-shadow: none;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
     }
 
     label {
@@ -91,7 +127,7 @@
     input {
       width: 100%;
       border: 1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.82);
       color: var(--text);
       padding: 15px 16px;
       border-radius: 16px;
@@ -113,7 +149,7 @@
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     button {
@@ -144,6 +180,7 @@
     .results {
       display: grid;
       gap: 14px;
+      margin-top: 20px;
     }
 
     .result {
@@ -174,6 +211,14 @@
       line-height: 1.45;
     }
 
+    .empty {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.05);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
     .theme-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -195,6 +240,7 @@
     .swatch {
       width: 34px;
       height: 34px;
+      padding: 0;
       border-radius: 999px;
       border: 2px solid white;
       box-shadow: 0 4px 14px rgba(0,0,0,.16);
@@ -216,14 +262,11 @@
       margin-top: 22px;
     }
 
-    .empty {
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(0,0,0,.05);
-      color: var(--muted);
+    .selected-box {
+      margin-top: 16px;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
       }
@@ -231,6 +274,14 @@
       .panel {
         border-radius: 24px;
         padding: 20px;
+      }
+
+      .tabs {
+        border-radius: 22px;
+      }
+
+      .tab {
+        flex: 1 1 100%;
       }
     }
   </style>
@@ -242,50 +293,89 @@
       <div class="eyebrow">TrustKit Reviews</div>
       <h1>Générateur de widget Google Reviews.</h1>
       <p class="lead">
-        Recherche une fiche Google, valide le bon établissement, récupère les couleurs du site cible,
-        ajuste le style, puis copie le code d’intégration.
+        Trouve une fiche Google, valide le bon établissement, récupère les couleurs du site cible,
+        ajuste le style, puis copie un code d’intégration universel.
       </p>
     </section>
 
     <section class="grid">
       <div>
         <div class="panel">
-          <h2>1. Rechercher l’établissement</h2>
-
-          <div class="field">
-            <label>Nom de l’établissement</label>
-            <input id="query" placeholder="Ex : Sabrina Donaté Hypnothérapeute et sophrologue" />
+          <div class="tabs">
+            <button class="tab active" onclick="showTab('manual')">Recherche simple</button>
+            <button class="tab" onclick="showTab('advanced')">Recherche avancée</button>
+            <button class="tab" onclick="showTab('maps')">Lien Google Maps</button>
           </div>
 
-          <div class="field">
-            <label>Lien Google Maps de la fiche</label>
-            <input id="mapsUrl" placeholder="Colle le lien de partage Google Maps de la fiche" />
-          </div>
-          
-          <button onclick="resolveMapsUrl()">Analyser le lien Google Maps</button>
+          <div id="tab-manual" class="tab-panel active">
+            <h2>1. Recherche simple</h2>
 
-          <div class="field">
-            <label>Ville / adresse pour préciser</label>
-            <input id="location" placeholder="Ex : Boulay-Moselle, France" />
+            <div class="field">
+              <label>Nom de l’établissement</label>
+              <input id="query" placeholder="Ex : Sabrina Donaté Hypnothérapeute et sophrologue" />
+            </div>
+
+            <div class="field">
+              <label>Ville / adresse pour préciser</label>
+              <input id="location" placeholder="Ex : Dalem, France" />
+            </div>
+
+            <div class="actions">
+              <button onclick="searchPlace()">Rechercher</button>
+            </div>
+
+            <div id="manualResults" class="results"></div>
           </div>
 
-          <div class="actions">
-            <button onclick="searchPlace()">Rechercher</button>
+          <div id="tab-advanced" class="tab-panel">
+            <h2>1. Recherche avancée</h2>
+            <p class="muted">
+              Utilise directement les suggestions Google Maps. C’est la méthode à privilégier pour les fiches difficiles à trouver.
+            </p>
+
+            <div class="field">
+              <label>Recherche Google Maps avancée</label>
+              <input id="googleAutocomplete" placeholder="Tape le nom exact de la fiche Google" />
+            </div>
+
+            <div id="advancedResult" class="empty">
+              Sélectionne une suggestion Google pour récupérer le Place ID.
+            </div>
           </div>
 
-          <div id="results" class="results" style="margin-top:20px;"></div>
+          <div id="tab-maps" class="tab-panel">
+            <h2>1. Lien Google Maps</h2>
+            <p class="muted">
+              Colle un lien de partage Google Maps ou un iframe embed. Cette méthode sert surtout à analyser ce que le lien contient.
+            </p>
+
+            <div class="field">
+              <label>Lien Google Maps ou iframe embed</label>
+              <input id="mapsUrl" placeholder="Colle ici le lien ou l’iframe Google Maps" />
+            </div>
+
+            <div class="actions">
+              <button onclick="resolveMapsUrl()">Analyser le lien</button>
+            </div>
+
+            <div id="mapsResults" class="results"></div>
+          </div>
         </div>
 
         <div class="panel">
-          <h2>2. Prévisualisation</h2>
+          <h2>2. Établissement validé</h2>
           <div id="selectedInfo" class="empty">Aucun établissement validé pour le moment.</div>
-          <div id="preview" class="preview"></div>
+        </div>
+
+        <div class="panel">
+          <h2>3. Prévisualisation</h2>
+          <div id="preview" class="preview empty">La prévisualisation apparaîtra ici après validation d’un établissement.</div>
         </div>
       </div>
 
       <aside>
         <div class="panel">
-          <h2>3. Style du widget</h2>
+          <h2>4. Style du widget</h2>
 
           <div class="field">
             <label>URL du site cible</label>
@@ -320,11 +410,11 @@
         </div>
 
         <div class="panel">
-          <h2>4. Code d'intégration</h2>
+          <h2>5. Code d’intégration</h2>
           <div id="code" class="code">Valide d’abord un établissement.</div>
 
           <div class="actions">
-            <button class="accent" onclick="copyCarrdCode()">Copier le code</button>
+            <button class="accent" onclick="copyEmbedCode()">Copier le code</button>
           </div>
         </div>
       </aside>
@@ -333,37 +423,100 @@
 
   <script>
     let selectedPlace = null;
+    window.__places = [];
+
+    function showTab(tab) {
+      document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(el => el.classList.remove("active"));
+
+      document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add("active");
+      document.getElementById(`tab-${tab}`).classList.add("active");
+    }
 
     async function searchPlace() {
-            const q = document.getElementById("query").value.trim();
+      const q = document.getElementById("query").value.trim();
       const location = document.getElementById("location").value.trim();
-      const mapsUrl = document.getElementById("mapsUrl").value.trim();
-      const results = document.getElementById("results");
-      
-      if (!q && !mapsUrl) {
-        results.innerHTML = `<div class="empty">Entre un nom ou colle un lien Google Maps.</div>`;
+      const results = document.getElementById("manualResults");
+
+      if (!q) {
+        results.innerHTML = `<div class="empty">Entre au moins un nom d’établissement.</div>`;
         return;
       }
 
       results.innerHTML = `<div class="empty">Recherche en cours...</div>`;
 
       const response = await fetch(
-        `/api/find-place?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}&maps_url=${encodeURIComponent(mapsUrl)}`
+        `/api/find-place?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`
       );
-      
-      const data = await response.json();
-      const places = data.places || [];
 
-      if (!Array.isArray(places) || !places.length) {
-        results.innerHTML = `<div class="empty">Aucun établissement trouvé. Essaie avec une ville ou une adresse plus précise.</div>`;
+      const data = await response.json();
+      const places = data.places || data || [];
+
+      renderResults(places, results);
+    }
+
+    async function resolveMapsUrl() {
+      const mapsUrl = document.getElementById("mapsUrl").value.trim();
+      const results = document.getElementById("mapsResults");
+
+      if (!mapsUrl) {
+        results.innerHTML = `<div class="empty">Colle d’abord un lien Google Maps ou un iframe embed.</div>`;
         return;
       }
 
-      results.innerHTML = places.map((place, index) => {
-        const name = place.displayName?.text || "Sans nom";
-        const address = place.formattedAddress || "";
+      results.innerHTML = `<div class="empty">Analyse du lien...</div>`;
+
+      const response = await fetch(
+        `/api/resolve-place?maps_url=${encodeURIComponent(mapsUrl)}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        results.innerHTML = `
+          <div class="empty">
+            ${escapeHtml(data.message || data.error || "Lien Google Maps non exploitable.")}
+          </div>
+        `;
+        return;
+      }
+
+      const places = data.places || [];
+
+      if (!places.length) {
+        results.innerHTML = `
+          <div class="empty">
+            Aucun établissement trouvé depuis ce lien.
+            <br><br>
+            Essaie l’onglet <strong>Recherche avancée</strong>, qui utilise directement les suggestions Google Maps.
+          </div>
+        `;
+        return;
+      }
+
+      renderResults(places, results);
+    }
+
+    function renderResults(places, container) {
+      if (!Array.isArray(places) || !places.length) {
+        container.innerHTML = `
+          <div class="empty">
+            Aucun établissement trouvé. Essaie avec un nom plus court, une ville différente,
+            ou passe par la recherche avancée.
+          </div>
+        `;
+        return;
+      }
+
+      window.__places = places;
+
+      container.innerHTML = places.map((place, index) => {
+        const name = place.displayName?.text || place.name || "Sans nom";
+        const address = place.formattedAddress || place.formatted_address || "Adresse non publique";
         const rating = place.rating ? `⭐ ${place.rating} / 5` : "";
-        const total = place.userRatingCount ? `${place.userRatingCount} avis` : "";
+        const total = place.userRatingCount || place.user_ratings_total
+          ? `${place.userRatingCount || place.user_ratings_total} avis`
+          : "";
 
         return `
           <div class="result" onclick="selectPlace(${index})">
@@ -373,29 +526,34 @@
           </div>
         `;
       }).join("");
-
-      window.__places = places;
     }
 
     function selectPlace(index) {
       selectedPlace = window.__places[index];
+      updateSelectedInfo();
+      refreshOutput();
+    }
 
-      document.querySelectorAll(".result").forEach(el => el.classList.remove("selected"));
-      document.querySelectorAll(".result")[index].classList.add("selected");
+    function selectPlaceObject(place) {
+      selectedPlace = place;
+      updateSelectedInfo();
+      refreshOutput();
+    }
 
-      const name = selectedPlace.displayName?.text || "Sans nom";
-      const address = selectedPlace.formattedAddress || "";
+    function updateSelectedInfo() {
+      const name = selectedPlace.displayName?.text || selectedPlace.name || "Sans nom";
+      const address = selectedPlace.formattedAddress || selectedPlace.formatted_address || "Adresse non publique";
       const rating = selectedPlace.rating ? `⭐ ${selectedPlace.rating} / 5` : "";
-      const total = selectedPlace.userRatingCount ? `${selectedPlace.userRatingCount} avis` : "";
+      const total = selectedPlace.userRatingCount || selectedPlace.user_ratings_total
+        ? `${selectedPlace.userRatingCount || selectedPlace.user_ratings_total} avis`
+        : "";
 
       document.getElementById("selectedInfo").innerHTML = `
         <strong>${escapeHtml(name)}</strong>
         <div class="muted">${escapeHtml(address)}</div>
         <div class="muted">${rating} ${total ? "— " + total : ""}</div>
-        <div class="muted" style="margin-top:8px;">${selectedPlace.id}</div>
+        <div class="muted" style="margin-top:8px;">${escapeHtml(selectedPlace.id || selectedPlace.place_id || "")}</div>
       `;
-
-      refreshOutput();
     }
 
     async function extractTheme() {
@@ -442,14 +600,15 @@
       const preview = document.getElementById("preview");
       const code = document.getElementById("code");
 
-      const carrdCode = getCarrdCode();
+      const embedCode = getEmbedCode();
 
-      code.textContent = carrdCode;
+      code.textContent = embedCode;
 
+      preview.classList.remove("empty");
       preview.innerHTML = `
         <div
           data-google-reviews
-          data-place-id="${selectedPlace.id}"
+          data-place-id="${selectedPlace.id || selectedPlace.place_id}"
           data-accent-color="${document.getElementById("accentColor").value}"
           data-bg-color="${document.getElementById("bgColor").value}"
           data-text-color="${document.getElementById("textColor").value}"
@@ -466,12 +625,12 @@
       document.body.appendChild(script);
     }
 
-    function getCarrdCode() {
+    function getEmbedCode() {
       if (!selectedPlace) return "";
 
       return `<div
   data-google-reviews
-  data-place-id="${selectedPlace.id}"
+  data-place-id="${selectedPlace.id || selectedPlace.place_id}"
   data-accent-color="${document.getElementById("accentColor").value}"
   data-bg-color="${document.getElementById("bgColor").value}"
   data-text-color="${document.getElementById("textColor").value}"
@@ -481,16 +640,89 @@
 <script src="https://widget.duet-studio.com/widget.js"><\/script>`;
     }
 
-    async function copyCarrdCode() {
-      const carrdCode = getCarrdCode();
+    async function copyEmbedCode() {
+      const embedCode = getEmbedCode();
 
-      if (!carrdCode) {
+      if (!embedCode) {
         alert("Valide d’abord un établissement.");
         return;
       }
 
-      await navigator.clipboard.writeText(carrdCode);
-      alert("Code Carrd copié.");
+      await navigator.clipboard.writeText(embedCode);
+      alert("Code d’intégration copié.");
+    }
+
+    async function loadGoogleAutocomplete() {
+      const result = document.getElementById("advancedResult");
+
+      try {
+        const configResponse = await fetch("/api/config");
+        const config = await configResponse.json();
+
+        if (!config.googleBrowserKey) {
+          result.innerHTML = "Clé Google navigateur manquante. Ajoute GOOGLE_BROWSER_KEY dans Vercel.";
+          return;
+        }
+
+        window.initGoogleAutocomplete = initGoogleAutocomplete;
+
+        const script = document.createElement("script");
+        script.src =
+          `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&libraries=places&language=fr&region=FR&callback=initGoogleAutocomplete`;
+        script.async = true;
+        script.defer = true;
+
+        document.body.appendChild(script);
+      } catch (error) {
+        result.innerHTML = "Impossible de charger Google Autocomplete.";
+      }
+    }
+
+    function initGoogleAutocomplete() {
+      const input = document.getElementById("googleAutocomplete");
+      const result = document.getElementById("advancedResult");
+
+      if (!input || !window.google?.maps?.places) {
+        result.innerHTML = "Google Autocomplete n’est pas disponible.";
+        return;
+      }
+
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        fields: ["place_id", "name", "formatted_address", "rating", "user_ratings_total", "url"],
+        componentRestrictions: { country: "fr" }
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+
+        if (!place.place_id) {
+          result.innerHTML = "Aucun Place ID récupéré. Essaie une autre suggestion.";
+          return;
+        }
+
+        const formattedPlace = {
+          id: place.place_id,
+          displayName: { text: place.name || "Sans nom" },
+          formattedAddress: place.formatted_address || "Adresse non publique",
+          rating: place.rating,
+          userRatingCount: place.user_ratings_total,
+          googleMapsUri: place.url
+        };
+
+        result.innerHTML = `
+          <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
+          <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
+          <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
+          <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
+          <div class="actions">
+            <button class="accent" onclick='selectPlaceObject(${JSON.stringify(formattedPlace).replaceAll("'", "&apos;")})'>
+              Valider cette fiche
+            </button>
+          </div>
+        `;
+
+        selectPlaceObject(formattedPlace);
+      });
     }
 
     function normalizeHex(color) {
@@ -506,68 +738,14 @@
     }
 
     function escapeHtml(value) {
-      return String(value)
+      return String(value || "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
     }
 
-    async function resolveMapsUrl() {
-  const mapsUrl = document.getElementById("mapsUrl").value.trim();
-  const results = document.getElementById("results");
-
-  if (!mapsUrl) {
-    results.innerHTML = `<div class="empty">Colle d’abord un lien Google Maps.</div>`;
-    return;
-  }
-
-  results.innerHTML = `<div class="empty">Analyse du lien Google Maps...</div>`;
-
-  const response = await fetch(
-    `/api/resolve-place?maps_url=${encodeURIComponent(mapsUrl)}`
-  );
-
-  const data = await response.json();
-
-if (!response.ok) {
-  results.innerHTML = `
-    <div class="empty">
-      ${escapeHtml(data.message || data.error || "Lien Google Maps non exploitable.")}
-      <br><br>
-      Essaie de copier le lien depuis : <strong>Google Maps → fiche → Partager → Copier le lien</strong>.
-    </div>
-  `;
-  return;
-}
-
-const places = data.places || [];
-
-  if (!places.length) {
-    results.innerHTML = `
-      <div class="empty">
-        Aucun établissement trouvé depuis ce lien. Essaie l’onglet recherche manuelle.
-      </div>
-    `;
-    return;
-  }
-
-  window.__places = places;
-
-  results.innerHTML = places.map((place, index) => {
-    const name = place.displayName?.text || "Sans nom";
-    const address = place.formattedAddress || "Adresse non publique";
-    const rating = place.rating ? `⭐ ${place.rating} / 5` : "";
-    const total = place.userRatingCount ? `${place.userRatingCount} avis` : "";
-
-    return `
-      <div class="result" onclick="selectPlace(${index})">
-        <strong>${escapeHtml(name)}</strong>
-        <div class="muted">${escapeHtml(address)}</div>
-        <div class="muted">${rating} ${total ? "— " + total : ""}</div>
-      </div>
-    `;
-  }).join("");
-}
+    loadGoogleAutocomplete();
   </script>
 </body>
 </html>
