@@ -680,7 +680,10 @@
         input.style.display = "none";
 
         const autocompleteElement = new PlaceAutocompleteElement({
-          includedRegionCodes: ["fr"]
+          includedRegionCodes: ["fr"],
+          requestedLanguage: "fr",
+          requestedRegion: "fr",
+          pureServiceAreaBusinessesIncluded: true
         });
 
         autocompleteElement.setAttribute(
@@ -699,6 +702,17 @@
             puis sélectionne une suggestion.
           </div>
         `;
+
+        autocompleteElement.addEventListener("gmp-error", (event) => {
+            result.innerHTML = `
+              <div class="empty">
+                Erreur Google Autocomplete.
+                <br><br>
+                Ouvre la console navigateur pour voir le détail exact.
+              </div>
+            `;
+            console.error("TrustKit Google Autocomplete error:", event);
+          });
 
         autocompleteElement.addEventListener("gmp-select", async (event) => {
           const place = event.placePrediction.toPlace();
