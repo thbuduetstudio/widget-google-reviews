@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": process.env.GOOGLE_API_KEY,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.googleMapsUri,businessStatus"
+         "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.googleMapsUri"
       },
       body: JSON.stringify({
         textQuery,
