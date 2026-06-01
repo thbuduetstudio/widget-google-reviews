@@ -6,9 +6,10 @@
 
   containers.forEach(async function (container) {
     const placeId = container.getAttribute("data-place-id");
+    const place = container.getAttribute("data-place");
 
-    if (!placeId) {
-      container.innerHTML = "Place ID manquant.";
+    if (!placeId && !place) {
+      container.innerHTML = "Place ID ou nom d'établissement manquant.";
       return;
     }
 
@@ -26,9 +27,11 @@
     injectStyles(fontFamily, textColor, bgColor, accentColor);
 
     try {
-      const response = await fetch(
-        `${apiBase}/api/reviews?place_id=${encodeURIComponent(placeId)}`
-      );
+      const query = placeId
+        ? `place_id=${encodeURIComponent(placeId)}`
+        : `place=${encodeURIComponent(place)}`;
+      
+      const response = await fetch(`${apiBase}/api/reviews?${query}`);
 
       const data = await response.json();
 
