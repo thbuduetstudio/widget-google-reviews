@@ -258,6 +258,11 @@
           </div>
 
           <div class="field">
+            <label>Lien Google Maps de la fiche</label>
+            <input id="mapsUrl" placeholder="Colle ici le lien Google Maps de la fiche" />
+          </div>
+
+          <div class="field">
             <label>Ville / adresse pour préciser</label>
             <input id="location" placeholder="Ex : Boulay-Moselle, France" />
           </div>
@@ -328,22 +333,24 @@
     let selectedPlace = null;
 
     async function searchPlace() {
-      const q = document.getElementById("query").value.trim();
+            const q = document.getElementById("query").value.trim();
       const location = document.getElementById("location").value.trim();
+      const mapsUrl = document.getElementById("mapsUrl").value.trim();
       const results = document.getElementById("results");
-
-      if (!q) {
-        results.innerHTML = `<div class="empty">Entre au moins un nom d’établissement.</div>`;
+      
+      if (!q && !mapsUrl) {
+        results.innerHTML = `<div class="empty">Entre un nom ou colle un lien Google Maps.</div>`;
         return;
       }
 
       results.innerHTML = `<div class="empty">Recherche en cours...</div>`;
 
       const response = await fetch(
-        `/api/find-place?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`
+        `/api/find-place?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}&maps_url=${encodeURIComponent(mapsUrl)}`
       );
-
-      const places = await response.json();
+      
+      const data = await response.json();
+      const places = data.places || [];
 
       if (!Array.isArray(places) || !places.length) {
         results.innerHTML = `<div class="empty">Aucun établissement trouvé. Essaie avec une ville ou une adresse plus précise.</div>`;
