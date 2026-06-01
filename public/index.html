@@ -4,152 +4,448 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TrustKit Reviews</title>
+
   <style>
+    :root {
+      --bg: #f5f2ec;
+      --card: rgba(255,255,255,.82);
+      --text: #1e1e1e;
+      --muted: #6f6a61;
+      --accent: #717254;
+      --border: rgba(0,0,0,.08);
+      --shadow: 0 24px 70px rgba(0,0,0,.10);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: system-ui, sans-serif;
-      background: #f6f4ef;
-      color: #1f1f1f;
-      padding: 40px 20px;
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(113,114,84,.18), transparent 34%),
+        linear-gradient(135deg, #fbfaf7, var(--bg));
+      color: var(--text);
+      padding: 48px 20px;
     }
 
     main {
-      max-width: 900px;
+      max-width: 1120px;
       margin: auto;
     }
 
+    .hero {
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(113,114,84,.12);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
     h1 {
-      font-size: 42px;
+      font-size: clamp(36px, 6vw, 64px);
+      line-height: .95;
+      margin: 0 0 14px;
+      letter-spacing: -0.05em;
+    }
+
+    .lead {
+      max-width: 680px;
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: 32px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
       margin-bottom: 8px;
-    }
-
-    p {
-      color: #666;
-    }
-
-    .search {
-      display: flex;
-      gap: 12px;
-      margin: 28px 0;
+      color: #3b3934;
     }
 
     input {
-      flex: 1;
-      padding: 16px;
-      border-radius: 14px;
-      border: 1px solid #ddd;
-      font-size: 16px;
+      width: 100%;
+      border: 1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.8);
+      color: var(--text);
+      padding: 15px 16px;
+      border-radius: 16px;
+      font-size: 15px;
+      outline: none;
+      transition: border .2s, box-shadow .2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(113,114,84,.12);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
     }
 
     button {
-      padding: 16px 22px;
       border: 0;
-      border-radius: 14px;
-      background: #111;
+      padding: 14px 18px;
+      border-radius: 999px;
+      background: #161616;
       color: white;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: .92;
+    }
+
+    button.secondary {
+      background: rgba(0,0,0,.08);
+      color: #1e1e1e;
+    }
+
+    button.accent {
+      background: var(--accent);
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
     }
 
     .result {
+      border: 1px solid rgba(0,0,0,.08);
       background: white;
-      border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+      border-radius: 22px;
+      padding: 18px;
+      cursor: pointer;
+      transition: transform .2s ease, border .2s ease, box-shadow .2s ease;
+    }
+
+    .result:hover,
+    .result.selected {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 16px 38px rgba(0,0,0,.08);
     }
 
     .result strong {
       display: block;
-      font-size: 20px;
+      font-size: 18px;
       margin-bottom: 6px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    input[type="color"] {
+      height: 52px;
+      padding: 6px;
+    }
+
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 2px solid white;
+      box-shadow: 0 4px 14px rgba(0,0,0,.16);
+      cursor: pointer;
     }
 
     .code {
       background: #111;
-      color: #f8f8f8;
-      padding: 18px;
-      border-radius: 16px;
+      color: #f7f7f7;
+      padding: 20px;
+      border-radius: 22px;
       white-space: pre-wrap;
+      overflow: auto;
       font-size: 14px;
-      margin-top: 16px;
+      line-height: 1.55;
     }
 
     .preview {
-      margin-top: 28px;
+      margin-top: 22px;
+    }
+
+    .empty {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.05);
+      color: var(--muted);
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        border-radius: 24px;
+        padding: 20px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main>
-    <h1>TrustKit Reviews</h1>
-    <p>Recherche une fiche Google, récupère son Place ID, puis copie le code Carrd.</p>
+    <section class="hero">
+      <div class="eyebrow">TrustKit Reviews</div>
+      <h1>Générateur de widget Google Reviews.</h1>
+      <p class="lead">
+        Recherche une fiche Google, valide le bon établissement, récupère les couleurs du site cible,
+        ajuste le style, puis copie le code Carrd prêt à intégrer.
+      </p>
+    </section>
 
-    <div class="search">
-      <input id="query" placeholder="Ex : Sabrina Donaté Hypnothérapeute et sophrologue" />
-      <button onclick="searchPlace()">Rechercher</button>
-    </div>
+    <section class="grid">
+      <div>
+        <div class="panel">
+          <h2>1. Rechercher l’établissement</h2>
 
-    <div id="results"></div>
-    <div id="preview" class="preview"></div>
+          <div class="field">
+            <label>Nom de l’établissement</label>
+            <input id="query" placeholder="Ex : Sabrina Donaté Hypnothérapeute et sophrologue" />
+          </div>
+
+          <div class="field">
+            <label>Ville / adresse pour préciser</label>
+            <input id="location" placeholder="Ex : Boulay-Moselle, France" />
+          </div>
+
+          <div class="actions">
+            <button onclick="searchPlace()">Rechercher</button>
+          </div>
+
+          <div id="results" class="results" style="margin-top:20px;"></div>
+        </div>
+
+        <div class="panel">
+          <h2>2. Prévisualisation</h2>
+          <div id="selectedInfo" class="empty">Aucun établissement validé pour le moment.</div>
+          <div id="preview" class="preview"></div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="panel">
+          <h2>3. Style du widget</h2>
+
+          <div class="field">
+            <label>URL du site cible</label>
+            <input id="siteUrl" placeholder="Ex : https://monsite.fr" />
+          </div>
+
+          <button class="secondary" onclick="extractTheme()">Analyser les couleurs</button>
+
+          <div id="swatches" class="swatches"></div>
+
+          <div class="theme-grid" style="margin-top:18px;">
+            <div class="field">
+              <label>Couleur principale</label>
+              <input id="accentColor" type="color" value="#717254" onchange="refreshOutput()" />
+            </div>
+
+            <div class="field">
+              <label>Fond</label>
+              <input id="bgColor" type="color" value="#ffffff" onchange="refreshOutput()" />
+            </div>
+
+            <div class="field">
+              <label>Texte</label>
+              <input id="textColor" type="color" value="#222222" onchange="refreshOutput()" />
+            </div>
+
+            <div class="field">
+              <label>Arrondi</label>
+              <input id="radius" type="number" value="24" min="0" max="48" onchange="refreshOutput()" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>4. Code Carrd</h2>
+          <div id="code" class="code">Valide d’abord un établissement.</div>
+
+          <div class="actions">
+            <button class="accent" onclick="copyCarrdCode()">Copier le code</button>
+          </div>
+        </div>
+      </aside>
+    </section>
   </main>
 
   <script>
+    let selectedPlace = null;
+
     async function searchPlace() {
       const q = document.getElementById("query").value.trim();
+      const location = document.getElementById("location").value.trim();
       const results = document.getElementById("results");
-      const preview = document.getElementById("preview");
 
-      results.innerHTML = "Recherche en cours...";
-      preview.innerHTML = "";
-
-      const response = await fetch(`/api/find-place?q=${encodeURIComponent(q)}`);
-      const places = await response.json();
-
-      if (!Array.isArray(places) || !places.length) {
-        results.innerHTML = "Aucun établissement trouvé.";
+      if (!q) {
+        results.innerHTML = `<div class="empty">Entre au moins un nom d’établissement.</div>`;
         return;
       }
 
-      results.innerHTML = places.map(place => {
+      results.innerHTML = `<div class="empty">Recherche en cours...</div>`;
+
+      const response = await fetch(
+        `/api/find-place?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`
+      );
+
+      const places = await response.json();
+
+      if (!Array.isArray(places) || !places.length) {
+        results.innerHTML = `<div class="empty">Aucun établissement trouvé. Essaie avec une ville ou une adresse plus précise.</div>`;
+        return;
+      }
+
+      results.innerHTML = places.map((place, index) => {
         const name = place.displayName?.text || "Sans nom";
         const address = place.formattedAddress || "";
-        const rating = place.rating || "";
-        const total = place.userRatingCount || "";
-        const placeId = place.id;
-
-        const carrdCode =
-`<div
-  data-google-reviews
-  data-place-id="${placeId}">
-</div>
-
-<script src="https://widget.duet-studio.com/widget.js"><\/script>`;
+        const rating = place.rating ? `⭐ ${place.rating} / 5` : "";
+        const total = place.userRatingCount ? `${place.userRatingCount} avis` : "";
 
         return `
-          <div class="result">
-            <strong>${name}</strong>
-            <div>${address}</div>
-            <div>${rating ? `⭐ ${rating} / 5` : ""} ${total ? `— ${total} avis` : ""}</div>
-            <div style="margin-top:10px;font-size:13px;color:#666;">${placeId}</div>
-
-            <button style="margin-top:14px;" onclick="copyCode(\`${encodeURIComponent(carrdCode)}\`)">
-              Copier le code Carrd
-            </button>
-
-            <button style="margin-top:14px;background:#555;" onclick="previewWidget('${placeId}')">
-              Prévisualiser
-            </button>
-
-            <div class="code">${escapeHtml(carrdCode)}</div>
+          <div class="result" onclick="selectPlace(${index})">
+            <strong>${escapeHtml(name)}</strong>
+            <div class="muted">${escapeHtml(address)}</div>
+            <div class="muted">${rating} ${total ? "— " + total : ""}</div>
           </div>
         `;
       }).join("");
+
+      window.__places = places;
     }
 
-    function previewWidget(placeId) {
+    function selectPlace(index) {
+      selectedPlace = window.__places[index];
+
+      document.querySelectorAll(".result").forEach(el => el.classList.remove("selected"));
+      document.querySelectorAll(".result")[index].classList.add("selected");
+
+      const name = selectedPlace.displayName?.text || "Sans nom";
+      const address = selectedPlace.formattedAddress || "";
+      const rating = selectedPlace.rating ? `⭐ ${selectedPlace.rating} / 5` : "";
+      const total = selectedPlace.userRatingCount ? `${selectedPlace.userRatingCount} avis` : "";
+
+      document.getElementById("selectedInfo").innerHTML = `
+        <strong>${escapeHtml(name)}</strong>
+        <div class="muted">${escapeHtml(address)}</div>
+        <div class="muted">${rating} ${total ? "— " + total : ""}</div>
+        <div class="muted" style="margin-top:8px;">${selectedPlace.id}</div>
+      `;
+
+      refreshOutput();
+    }
+
+    async function extractTheme() {
+      const siteUrl = document.getElementById("siteUrl").value.trim();
+      const swatches = document.getElementById("swatches");
+
+      if (!siteUrl) {
+        swatches.innerHTML = `<div class="muted">Entre d’abord l’URL du site.</div>`;
+        return;
+      }
+
+      swatches.innerHTML = `<div class="muted">Analyse en cours...</div>`;
+
+      const response = await fetch(`/api/extract-theme?url=${encodeURIComponent(siteUrl)}`);
+      const data = await response.json();
+
+      if (!data.colors || !data.colors.length) {
+        swatches.innerHTML = `<div class="muted">Aucune couleur détectée. Tu peux régler les couleurs à la main.</div>`;
+        return;
+      }
+
+      document.getElementById("accentColor").value = normalizeHex(data.suggested.accentColor) || "#717254";
+      document.getElementById("bgColor").value = data.suggested.bgColor || "#ffffff";
+      document.getElementById("textColor").value = data.suggested.textColor || "#222222";
+      document.getElementById("radius").value = data.suggested.radius || 24;
+
+      swatches.innerHTML = data.colors.map(color => {
+        const hex = normalizeHex(color);
+        if (!hex) return "";
+        return `<button class="swatch" style="background:${hex}" onclick="setAccent('${hex}')"></button>`;
+      }).join("");
+
+      refreshOutput();
+    }
+
+    function setAccent(color) {
+      document.getElementById("accentColor").value = color;
+      refreshOutput();
+    }
+
+    function refreshOutput() {
+      if (!selectedPlace) return;
+
       const preview = document.getElementById("preview");
+      const code = document.getElementById("code");
+
+      const carrdCode = getCarrdCode();
+
+      code.textContent = carrdCode;
+
       preview.innerHTML = `
-        <div data-google-reviews data-place-id="${placeId}"></div>
+        <div
+          data-google-reviews
+          data-place-id="${selectedPlace.id}"
+          data-accent-color="${document.getElementById("accentColor").value}"
+          data-bg-color="${document.getElementById("bgColor").value}"
+          data-text-color="${document.getElementById("textColor").value}"
+          data-radius="${document.getElementById("radius").value}">
+        </div>
       `;
 
       const old = document.getElementById("trustkit-widget-script");
@@ -161,10 +457,43 @@
       document.body.appendChild(script);
     }
 
-    async function copyCode(encoded) {
-      const code = decodeURIComponent(encoded);
-      await navigator.clipboard.writeText(code);
+    function getCarrdCode() {
+      if (!selectedPlace) return "";
+
+      return `<div
+  data-google-reviews
+  data-place-id="${selectedPlace.id}"
+  data-accent-color="${document.getElementById("accentColor").value}"
+  data-bg-color="${document.getElementById("bgColor").value}"
+  data-text-color="${document.getElementById("textColor").value}"
+  data-radius="${document.getElementById("radius").value}">
+</div>
+
+<script src="https://widget.duet-studio.com/widget.js"><\/script>`;
+    }
+
+    async function copyCarrdCode() {
+      const carrdCode = getCarrdCode();
+
+      if (!carrdCode) {
+        alert("Valide d’abord un établissement.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(carrdCode);
       alert("Code Carrd copié.");
+    }
+
+    function normalizeHex(color) {
+      if (!color || !color.startsWith("#")) return null;
+
+      if (color.length === 4) {
+        return "#" + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+      }
+
+      if (color.length === 7) return color;
+
+      return null;
     }
 
     function escapeHtml(value) {
