@@ -36,7 +36,12 @@
       const data = await response.json();
 
       if (!response.ok || !data.reviews) {
-        container.innerHTML = "";
+        container.innerHTML = `
+          <pre style="white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:12px;color:#111;">
+      Erreur TrustKit :
+      ${JSON.stringify(data, null, 2)}
+          </pre>
+        `;
         return;
       }
 
@@ -91,7 +96,12 @@
         </section>
       `;
     } catch (error) {
-      container.innerHTML = "";
+      container.innerHTML = `
+        <pre style="white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:12px;color:#111;">
+      Erreur TrustKit :
+      ${error.message}
+        </pre>
+      `;
     }
   });
 
