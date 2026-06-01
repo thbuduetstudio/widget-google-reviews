@@ -665,121 +665,66 @@
       }
     }
 
-    async function initGoogleAutocomplete() {
-      const input = document.getElementById("googleAutocomplete");
-      const result = document.getElementById("advancedResult");
+    function initGoogleAutocomplete() {
+  const input = document.getElementById("googleAutocomplete");
+  const result = document.getElementById("advancedResult");
 
-      if (!window.google?.maps?.importLibrary) {
-        result.innerHTML = "Google Maps JavaScript API n’est pas disponible.";
-        return;
-      }
-
-      try {
-        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
-
-        input.style.display = "none";
-
-        const autocompleteElement = new PlaceAutocompleteElement({
-          includedRegionCodes: ["fr"],
-          requestedLanguage: "fr",
-          requestedRegion: "fr",
-          pureServiceAreaBusinessesIncluded: true
-        });
-
-        autocompleteElement.setAttribute(
-          "placeholder",
-          "Tape le nom exact de la fiche Google"
-        );
-
-        autocompleteElement.style.display = "block";
-        autocompleteElement.style.width = "100%";
-
-        input.parentNode.appendChild(autocompleteElement);
-
-        result.innerHTML = `
-          <div class="empty">
-            Tape le nom de l’établissement dans le champ Google ci-dessus,
-            puis sélectionne une suggestion.
-          </div>
-        `;
-
-        autocompleteElement.addEventListener("gmp-error", (event) => {
-            result.innerHTML = `
-              <div class="empty">
-                Erreur Google Autocomplete.
-                <br><br>
-                Ouvre la console navigateur pour voir le détail exact.
-              </div>
-            `;
-            console.error("TrustKit Google Autocomplete error:", event);
-          });
-
-        autocompleteElement.addEventListener("gmp-select", async (event) => {
-  console.log("TrustKit gmp-select event:", event);
-
-  const prediction =
-    event.placePrediction ||
-    event.detail?.placePrediction ||
-    event.detail?.prediction ||
-    null;
-
-  if (!prediction) {
-    result.innerHTML = `
-      <div class="empty">
-        Suggestion sélectionnée, mais impossible de lire la prédiction Google.
-        <br><br>
-        Regarde la console pour l'objet complet.
-      </div>
-    `;
-    console.error("TrustKit: no prediction found in event", event);
+  if (!input || !window.google?.maps?.places) {
+    result.innerHTML = "Google Places n’est pas disponible.";
     return;
   }
 
-  const place = prediction.toPlace();
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: [
+      "place_id",
+      "name",
+      "formatted_address",
+      "rating",
+      "user_ratings_total",
+      "url"
+    ],
+    componentRestrictions: { country: "fr" }
+  });
 
-          await place.fetchFields({
-            fields: [
-              "id",
-              "displayName",
-              "formattedAddress",
-              "rating",
-              "userRatingCount",
-              "googleMapsURI"
-            ]
-          });
+  result.innerHTML = `
+    <div class="empty">
+      Tape le nom de l’établissement, puis sélectionne une suggestion Google.
+    </div>
+  `;
 
-          const placeData = place.toJSON();
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
 
-          const formattedPlace = {
-            id: placeData.id,
-            displayName: {
-              text: placeData.displayName || "Sans nom"
-            },
-            formattedAddress: placeData.formattedAddress || "Adresse non publique",
-            rating: placeData.rating,
-            userRatingCount: placeData.userRatingCount,
-            googleMapsUri: placeData.googleMapsURI
-          };
-
-          result.innerHTML = `
-            <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
-            <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
-            <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
-            <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
-          `;
-
-          selectPlaceObject(formattedPlace);
-        });
-      } catch (error) {
-        result.innerHTML = `
-          <div class="empty">
-            Impossible d’initialiser la recherche avancée.
-            <br><br>
-            ${escapeHtml(error.message)}
-          </div>
-        `;
-      }
+    if (!place.place_id) {
+      result.innerHTML = `
+        <div class="empty">
+          Aucune fiche sélectionnée. Il faut cliquer sur une suggestion Google, pas seulement taper le texte.
+        </div>
+      `;
+      return;
     }
+
+    const formattedPlace = {
+      id: place.place_id,
+      displayName: {
+        text: place.name || "Sans nom"
+      },
+      formattedAddress: place.formatted_address || "Adresse non publique",
+      rating: place.rating,
+      userRatingCount: place.user_ratings_total,
+      googleMapsUri: place.url
+    };
+
+    result.innerHTML = `
+      <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
+      <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
+      <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
+      <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
+    `;
+
+    selectPlaceObject(formattedPlace);
+  });
+}
 
     function normalizeHex(color) {
       if (!color || !color.startsWith("#")) return null;
