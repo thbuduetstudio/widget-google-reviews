@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustKit Reviews</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f6f4ef;
+      color: #1f1f1f;
+      padding: 40px 20px;
+    }
+
+    main {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    .search {
+      display: flex;
+      gap: 12px;
+      margin: 28px 0;
+    }
+
+    input {
+      flex: 1;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 16px 22px;
+      border: 0;
+      border-radius: 14px;
+      background: #111;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .result {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    }
+
+    .result strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .code {
+      background: #111;
+      color: #f8f8f8;
+      padding: 18px;
+      border-radius: 16px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .preview {
+      margin-top: 28px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>TrustKit Reviews</h1>
+    <p>Recherche une fiche Google, récupère son Place ID, puis copie le code Carrd.</p>
+
+    <div class="search">
+      <input id="query" placeholder="Ex : Sabrina Donaté Hypnothérapeute et sophrologue" />
+      <button onclick="searchPlace()">Rechercher</button>
+    </div>
+
+    <div id="results"></div>
+    <div id="preview" class="preview"></div>
+  </main>
+
+  <script>
+    async function searchPlace() {
+      const q = document.getElementById("query").value.trim();
+      const results = document.getElementById("results");
+      const preview = document.getElementById("preview");
+
+      results.innerHTML = "Recherche en cours...";
+      preview.innerHTML = "";
+
+      const response = await fetch(`/api/find-place?q=${encodeURIComponent(q)}`);
+      const places = await response.json();
+
+      if (!Array.isArray(places) || !places.length) {
+        results.innerHTML = "Aucun établissement trouvé.";
+        return;
+      }
+
+      results.innerHTML = places.map(place => {
+        const name = place.displayName?.text || "Sans nom";
+        const address = place.formattedAddress || "";
+        const rating = place.rating || "";
+        const total = place.userRatingCount || "";
+        const placeId = place.id;
+
+        const carrdCode =
+`<div
+  data-google-reviews
+  data-place-id="${placeId}">
+</div>
+
+<script src="https://widget.duet-studio.com/widget.js"><\/script>`;
+
+        return `
+          <div class="result">
+            <strong>${name}</strong>
+            <div>${address}</div>
+            <div>${rating ? `⭐ ${rating} / 5` : ""} ${total ? `— ${total} avis` : ""}</div>
+            <div style="margin-top:10px;font-size:13px;color:#666;">${placeId}</div>
+
+            <button style="margin-top:14px;" onclick="copyCode(\`${encodeURIComponent(carrdCode)}\`)">
+              Copier le code Carrd
+            </button>
+
+            <button style="margin-top:14px;background:#555;" onclick="previewWidget('${placeId}')">
+              Prévisualiser
+            </button>
+
+            <div class="code">${escapeHtml(carrdCode)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function previewWidget(placeId) {
+      const preview = document.getElementById("preview");
+      preview.innerHTML = `
+        <div data-google-reviews data-place-id="${placeId}"></div>
+      `;
+
+      const old = document.getElementById("trustkit-widget-script");
+      if (old) old.remove();
+
+      const script = document.createElement("script");
+      script.id = "trustkit-widget-script";
+      script.src = "/widget.js?v=" + Date.now();
+      document.body.appendChild(script);
+    }
+
+    async function copyCode(encoded) {
+      const code = decodeURIComponent(encoded);
+      await navigator.clipboard.writeText(code);
+      alert("Code Carrd copié.");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+  </script>
+</body>
+</html>
