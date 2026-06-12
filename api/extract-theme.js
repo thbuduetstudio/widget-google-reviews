@@ -6,15 +6,14 @@ export default async function handler(req, res) {
 
   try {
     const targetUrl = url.startsWith("http") ? url : `https://${url}`;
+
     const response = await fetch(targetUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 TrustKitThemeBot" }
+      headers: {
+        "User-Agent": "Mozilla/5.0 TrustKitThemeBot"
+      }
     });
 
     const html = await response.text();
-
-    const colorMatches = [
-      ...html.matchAll(/#[0-9a-fA-F]{3,6}/g)
-    ].map(m => normalizeHex(m[0])).filter(Boolean);
 
     const themeColor =
       html.match(/<meta[^>]+name=["']theme-color["'][^>]+content=["']([^"']+)["']/i)?.[1] ||
@@ -24,23 +23,25 @@ export default async function handler(req, res) {
       ...html.matchAll(/--[^:]+:\s*(#[0-9a-fA-F]{3,6})/g)
     ].map(m => normalizeHex(m[1])).filter(Boolean);
 
+    const hexColors = [
+      ...html.matchAll(/#[0-9a-fA-F]{3,6}/g)
+    ].map(m => normalizeHex(m[0])).filter(Boolean);
+
     const ranked = rankColors([
       themeColor,
       ...cssVarColors,
-      ...colorMatches
+      ...hexColors
     ]);
 
     const accent = ranked[0] || "#2563eb";
-    const text = isDarkColor(accent) ? "#222222" : "#1f1f1f";
-    const bg = "#ffffff";
 
     return res.status(200).json({
       url: targetUrl,
-      colors: ranked.slice(0, 10),
+      colors: ranked.slice(0, 12),
       suggested: {
         accentColor: accent,
-        bgColor: bg,
-        textColor: text,
+        bgColor: "#ffffff",
+        textColor: "#111827",
         radius: 24
       }
     });
@@ -77,11 +78,7 @@ function rankColors(colors) {
     });
 
   return Object.entries(counts)
-    .sort((a, b) => {
-      const scoreA = scoreColor(a[0], a[1]);
-      const scoreB = scoreColor(b[0], b[1]);
-      return scoreB - scoreA;
-    })
+    .sort((a, b) => scoreColor(b[0], b[1]) - scoreColor(a[0], a[1]))
     .map(([color]) => color);
 }
 
@@ -111,21 +108,18 @@ function isNeutral(hex) {
   return false;
 }
 
-function isDarkColor(hex) {
-  const { r, g, b } = hexToRgb(hex);
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance < 120;
-}
-
 function getSaturation(r, g, b) {
   const max = Math.max(r, g, b) / 255;
   const min = Math.min(r, g, b) / 255;
+
   if (max === min) return 0;
+
   return (max - min) / max;
 }
 
 function hexToRgb(hex) {
   const clean = hex.replace("#", "");
+
   return {
     r: parseInt(clean.substring(0, 2), 16),
     g: parseInt(clean.substring(2, 4), 16),
