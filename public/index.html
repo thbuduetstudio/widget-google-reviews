@@ -28,18 +28,14 @@
       padding: 48px 20px;
     }
 
-    main {
-      max-width: 1160px;
-      margin: auto;
-    }
-
+    main { max-width: 1160px; margin: auto; }
     .hero { margin-bottom: 34px; }
 
     .eyebrow {
       display: inline-flex;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(113,114,84,.12);
+      background: rgba(37,99,235,.10);
       color: var(--accent);
       font-weight: 800;
       font-size: 13px;
@@ -53,10 +49,7 @@
       letter-spacing: -0.05em;
     }
 
-    h2 {
-      margin-top: 0;
-      letter-spacing: -0.03em;
-    }
+    h2 { margin-top: 0; letter-spacing: -0.03em; }
 
     .lead {
       max-width: 760px;
@@ -77,8 +70,7 @@
       background: var(--card);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-      border-radius: 32px;
+      border-radius: 28px;
       padding: 28px;
       margin-bottom: 24px;
     }
@@ -90,12 +82,12 @@
       margin-bottom: 22px;
       padding: 8px;
       border-radius: 999px;
-      background: rgba(0,0,0,.05);
+      background: rgba(17,24,39,.05);
     }
 
     .tab {
       background: transparent;
-      color: #1e1e1e;
+      color: var(--text);
       box-shadow: none;
       flex: 1;
       min-width: 150px;
@@ -114,24 +106,24 @@
       font-size: 13px;
       font-weight: 800;
       margin-bottom: 8px;
-      color: #3b3934;
+      color: #374151;
     }
 
-    input {
+    input, select {
       width: 100%;
-      border: 1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(17,24,39,.12);
+      background: #ffffff;
       color: var(--text);
       padding: 15px 16px;
-      border-radius: 16px;
+      border-radius: 14px;
       font-size: 15px;
       outline: none;
       transition: border .2s, box-shadow .2s;
     }
 
-    input:focus {
+    input:focus, select:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(113,114,84,.12);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
     }
 
     .field { margin-bottom: 16px; }
@@ -147,21 +139,18 @@
       border: 0;
       padding: 14px 18px;
       border-radius: 999px;
-      background: #161616;
+      background: #111827;
       color: white;
       font-weight: 800;
       cursor: pointer;
       transition: transform .18s ease, opacity .18s ease;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      opacity: .92;
-    }
+    button:hover { transform: translateY(-1px); opacity: .92; }
 
     button.secondary {
-      background: rgba(0,0,0,.08);
-      color: #1e1e1e;
+      background: rgba(17,24,39,.08);
+      color: var(--text);
     }
 
     button.accent { background: var(--accent); }
@@ -173,9 +162,9 @@
     }
 
     .result {
-      border: 1px solid rgba(0,0,0,.08);
+      border: 1px solid rgba(17,24,39,.08);
       background: white;
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 18px;
       cursor: pointer;
       transition: transform .2s ease, border .2s ease, box-shadow .2s ease;
@@ -185,7 +174,7 @@
     .result.selected {
       transform: translateY(-2px);
       border-color: var(--accent);
-      box-shadow: 0 16px 38px rgba(0,0,0,.08);
+      box-shadow: 0 16px 38px rgba(17,24,39,.08);
     }
 
     .result strong {
@@ -202,8 +191,8 @@
 
     .empty {
       padding: 18px;
-      border-radius: 18px;
-      background: rgba(0,0,0,.05);
+      border-radius: 16px;
+      background: rgba(17,24,39,.05);
       color: var(--muted);
       line-height: 1.5;
     }
@@ -232,15 +221,15 @@
       padding: 0;
       border-radius: 999px;
       border: 2px solid white;
-      box-shadow: 0 4px 14px rgba(0,0,0,.16);
+      box-shadow: 0 4px 14px rgba(17,24,39,.16);
       cursor: pointer;
     }
 
     .code {
-      background: #111;
-      color: #f7f7f7;
+      background: #111827;
+      color: #f9fafb;
       padding: 20px;
-      border-radius: 22px;
+      border-radius: 20px;
       white-space: pre-wrap;
       overflow: auto;
       font-size: 14px;
@@ -249,21 +238,9 @@
 
     .preview { margin-top: 22px; }
 
-    gmp-place-autocomplete {
-      width: 100%;
-      display: block;
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
-
-      .panel {
-        border-radius: 24px;
-        padding: 20px;
-      }
-
+      .panel { border-radius: 22px; padding: 20px; }
       .tabs { border-radius: 22px; }
       .tab { flex: 1 1 100%; }
     }
@@ -287,7 +264,6 @@
           <div class="tabs">
             <button class="tab active" onclick="showTab('manual')">Recherche simple</button>
             <button class="tab" onclick="showTab('advanced')">Recherche avancée</button>
-            <button class="tab" onclick="showTab('maps')">Lien Google Maps</button>
           </div>
 
           <div id="tab-manual" class="tab-panel active">
@@ -300,7 +276,7 @@
 
             <div class="field">
               <label>Ville / adresse pour préciser</label>
-              <input id="location" placeholder="Ex : Dalem, France" />
+              <input id="location" placeholder="Ex : Paris, France" />
             </div>
 
             <div class="actions">
@@ -313,35 +289,17 @@
           <div id="tab-advanced" class="tab-panel">
             <h2>1. Recherche avancée</h2>
             <p class="muted">
-              Utilise directement les suggestions Google Maps. C’est la méthode à privilégier pour les fiches difficiles à trouver.
+              Utilise directement les suggestions Google Maps. Cette méthode aide à récupérer le Place ID quand la recherche simple ne suffit pas.
             </p>
 
             <div class="field">
               <label>Recherche Google Maps avancée</label>
-              <input id="googleAutocomplete" placeholder="Chargement du champ Google..." />
+              <input id="googleAutocomplete" placeholder="Tape le nom exact de la fiche Google" />
             </div>
 
             <div id="advancedResult" class="empty">
               Sélectionne une suggestion Google pour récupérer le Place ID.
             </div>
-          </div>
-
-          <div id="tab-maps" class="tab-panel">
-            <h2>1. Lien Google Maps</h2>
-            <p class="muted">
-              Colle un lien de partage Google Maps ou un iframe embed. Cette méthode sert surtout à analyser ce que le lien contient.
-            </p>
-
-            <div class="field">
-              <label>Lien Google Maps ou iframe embed</label>
-              <input id="mapsUrl" placeholder="Colle ici le lien ou l’iframe Google Maps" />
-            </div>
-
-            <div class="actions">
-              <button onclick="resolveMapsUrl()">Analyser le lien</button>
-            </div>
-
-            <div id="mapsResults" class="results"></div>
           </div>
         </div>
 
@@ -369,13 +327,13 @@
 
           <div class="field" style="margin-top:16px;">
             <label>Appliquer la couleur sélectionnée à</label>
-            <select id="colorTarget" style="width:100%;padding:15px 16px;border-radius:16px;border:1px solid rgba(0,0,0,.12);">
+            <select id="colorTarget">
               <option value="accentColor">Couleur principale</option>
               <option value="bgColor">Fond</option>
               <option value="textColor">Texte</option>
             </select>
           </div>
-          
+
           <div id="swatches" class="swatches"></div>
 
           <div class="theme-grid" style="margin-top:18px;">
@@ -391,7 +349,7 @@
 
             <div class="field">
               <label>Texte</label>
-              <input id="textColor" type="color" value="#222222" onchange="refreshOutput()" />
+              <input id="textColor" type="color" value="#111827" onchange="refreshOutput()" />
             </div>
 
             <div class="field">
@@ -447,48 +405,6 @@
       renderResults(places, results);
     }
 
-    async function resolveMapsUrl() {
-      const mapsUrl = document.getElementById("mapsUrl").value.trim();
-      const results = document.getElementById("mapsResults");
-
-      if (!mapsUrl) {
-        results.innerHTML = `<div class="empty">Colle d’abord un lien Google Maps ou un iframe embed.</div>`;
-        return;
-      }
-
-      results.innerHTML = `<div class="empty">Analyse du lien...</div>`;
-
-      const response = await fetch(
-        `/api/resolve-place?maps_url=${encodeURIComponent(mapsUrl)}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        results.innerHTML = `
-          <div class="empty">
-            ${escapeHtml(data.message || data.error || "Lien Google Maps non exploitable.")}
-          </div>
-        `;
-        return;
-      }
-
-      const places = data.places || [];
-
-      if (!places.length) {
-        results.innerHTML = `
-          <div class="empty">
-            Aucun établissement trouvé depuis ce lien.
-            <br><br>
-            Essaie l’onglet <strong>Recherche avancée</strong>, qui utilise directement les suggestions Google Maps.
-          </div>
-        `;
-        return;
-      }
-
-      renderResults(places, results);
-    }
-
     function renderResults(places, container) {
       if (!Array.isArray(places) || !places.length) {
         container.innerHTML = `
@@ -524,16 +440,22 @@
       selectedPlace = window.__places[index];
       updateSelectedInfo();
       refreshOutput();
+      autoFillWebsiteAndTheme();
     }
 
     function selectPlaceObject(place) {
       selectedPlace = place;
       updateSelectedInfo();
       refreshOutput();
+      autoFillWebsiteAndTheme();
     }
 
     function getPlaceId(place) {
       return place?.id || place?.place_id || "";
+    }
+
+    function getWebsite(place) {
+      return place?.websiteUri || place?.website || "";
     }
 
     function updateSelectedInfo() {
@@ -543,13 +465,25 @@
       const total = selectedPlace.userRatingCount || selectedPlace.user_ratings_total
         ? `${selectedPlace.userRatingCount || selectedPlace.user_ratings_total} avis`
         : "";
+      const website = getWebsite(selectedPlace);
 
       document.getElementById("selectedInfo").innerHTML = `
         <strong>${escapeHtml(name)}</strong>
         <div class="muted">${escapeHtml(address)}</div>
         <div class="muted">${rating} ${total ? "— " + total : ""}</div>
         <div class="muted" style="margin-top:8px;">${escapeHtml(getPlaceId(selectedPlace))}</div>
+        ${website ? `<div class="muted" style="margin-top:8px;">Site : ${escapeHtml(website)}</div>` : ""}
       `;
+    }
+
+    async function autoFillWebsiteAndTheme() {
+      const siteInput = document.getElementById("siteUrl");
+      const website = getWebsite(selectedPlace);
+
+      if (!website || !siteInput) return;
+
+      siteInput.value = website;
+      await extractTheme();
     }
 
     async function extractTheme() {
@@ -573,19 +507,19 @@
 
       document.getElementById("accentColor").value = normalizeHex(data.suggested.accentColor) || "#2563eb";
       document.getElementById("bgColor").value = data.suggested.bgColor || "#ffffff";
-      document.getElementById("textColor").value = data.suggested.textColor || "#222222";
+      document.getElementById("textColor").value = data.suggested.textColor || "#111827";
       document.getElementById("radius").value = data.suggested.radius || 24;
 
       swatches.innerHTML = data.colors.map(color => {
         const hex = normalizeHex(color);
         if (!hex) return "";
-        return `<button class="swatch" title="${hex}" style="background:${hex}" onclick="setAccent('${hex}')"></button>`;
+        return `<button class="swatch" title="${hex}" style="background:${hex}" onclick="applyColor('${hex}')"></button>`;
       }).join("");
 
       refreshOutput();
     }
 
-    function setAccent(color) {
+    function applyColor(color) {
       const target = document.getElementById("colorTarget")?.value || "accentColor";
       document.getElementById(target).value = color;
       refreshOutput();
@@ -596,7 +530,6 @@
 
       const preview = document.getElementById("preview");
       const code = document.getElementById("code");
-
       const embedCode = getEmbedCode();
 
       code.textContent = embedCode;
@@ -665,8 +598,7 @@
 
         const script = document.createElement("script");
         script.src =
-         `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&v=weekly&libraries=places&language=fr&region=FR&loading=async&callback=initGoogleAutocomplete`;
-        
+          `https://maps.googleapis.com/maps/api/js?key=${config.googleBrowserKey}&v=weekly&libraries=places&language=fr&region=FR&loading=async&callback=initGoogleAutocomplete`;
         script.async = true;
         script.defer = true;
 
@@ -677,65 +609,65 @@
     }
 
     function initGoogleAutocomplete() {
-  const input = document.getElementById("googleAutocomplete");
-  const result = document.getElementById("advancedResult");
+      const input = document.getElementById("googleAutocomplete");
+      const result = document.getElementById("advancedResult");
 
-  if (!input || !window.google?.maps?.places) {
-    result.innerHTML = "Google Places n’est pas disponible.";
-    return;
-  }
+      if (!input || !window.google?.maps?.places) {
+        result.innerHTML = "Google Places n’est pas disponible.";
+        return;
+      }
 
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: [
-      "place_id",
-      "name",
-      "formatted_address",
-      "rating",
-      "user_ratings_total",
-      "url"
-    ],
-    componentRestrictions: { country: "fr" }
-  });
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        fields: [
+          "place_id",
+          "name",
+          "formatted_address",
+          "rating",
+          "user_ratings_total",
+          "url",
+          "website"
+        ],
+        componentRestrictions: { country: "fr" }
+      });
 
-  result.innerHTML = `
-    <div class="empty">
-      Tape le nom de l’établissement, puis sélectionne une suggestion Google.
-    </div>
-  `;
-
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-
-    if (!place.place_id) {
       result.innerHTML = `
         <div class="empty">
-          Aucune fiche sélectionnée. Il faut cliquer sur une suggestion Google, pas seulement taper le texte.
+          Tape le nom de l’établissement, puis sélectionne une suggestion Google.
         </div>
       `;
-      return;
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+
+        if (!place.place_id) {
+          result.innerHTML = `
+            <div class="empty">
+              Aucune fiche sélectionnée. Il faut cliquer sur une suggestion Google, pas seulement taper le texte.
+            </div>
+          `;
+          return;
+        }
+
+        const formattedPlace = {
+          id: place.place_id,
+          displayName: { text: place.name || "Sans nom" },
+          formattedAddress: place.formatted_address || "Adresse non publique",
+          rating: place.rating,
+          userRatingCount: place.user_ratings_total,
+          googleMapsUri: place.url,
+          websiteUri: place.website || ""
+        };
+
+        result.innerHTML = `
+          <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
+          <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
+          <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
+          <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
+        `;
+
+        selectPlaceObject(formattedPlace);
+      });
     }
-
-    const formattedPlace = {
-      id: place.place_id,
-      displayName: {
-        text: place.name || "Sans nom"
-      },
-      formattedAddress: place.formatted_address || "Adresse non publique",
-      rating: place.rating,
-      userRatingCount: place.user_ratings_total,
-      googleMapsUri: place.url
-    };
-
-    result.innerHTML = `
-      <strong>${escapeHtml(formattedPlace.displayName.text)}</strong>
-      <div class="muted">${escapeHtml(formattedPlace.formattedAddress)}</div>
-      <div class="muted">⭐ ${formattedPlace.rating || "-"} / 5 — ${formattedPlace.userRatingCount || 0} avis</div>
-      <div class="muted" style="margin-top:8px;">${escapeHtml(formattedPlace.id)}</div>
-    `;
-
-    selectPlaceObject(formattedPlace);
-  });
-}
 
     function normalizeHex(color) {
       if (!color || !color.startsWith("#")) return null;
