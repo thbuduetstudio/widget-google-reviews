@@ -33,7 +33,11 @@
       container.getAttribute("data-radius") ||
       "24";
 
+    const widgetUid = "tk-" + Math.random().toString(36).slice(2);
+    container.setAttribute("data-trustkit-id", widgetUid);
+
     injectStyles({
+      widgetUid,
       fontFamily: computed.fontFamily || "system-ui, sans-serif",
       accentColor,
       bgColor,
@@ -67,7 +71,7 @@
     const rating = data.rating || "";
     const total = data.userRatingCount || "";
     const mapsUrl = data.googleMapsUri || "#";
-    const widgetId = "tk-" + Math.random().toString(36).slice(2);
+    const widgetId = container.getAttribute("data-trustkit-id");
 
     container.innerHTML = `
       <section class="tk-widget" id="${widgetId}" data-current="0">
@@ -79,7 +83,7 @@
 
           <div class="tk-score">
             <div class="tk-score-main">
-              <span>${rating ? rating.toFixed ? rating.toFixed(1) : rating : ""}</span>
+              <span>${rating ? Number(rating).toFixed(1) : ""}</span>
               <span class="tk-stars">${stars(rating)}</span>
             </div>
             ${total ? `<div class="tk-total">${total} avis</div>` : ""}
@@ -99,7 +103,7 @@
         <div class="tk-bottom">
           <div class="tk-dots">
             ${reviews.map((_, index) => `
-              <button class="tk-dot ${index === 0 ? "active" : ""}" type="button" data-index="${index}"></button>
+              <button class="tk-dot ${index === 0 ? "active" : ""}" type="button" data-index="${index}" aria-label="Voir l'avis ${index + 1}"></button>
             `).join("")}
           </div>
 
@@ -128,6 +132,7 @@
       button.addEventListener("click", () => {
         const text = button.previousElementSibling;
         text.classList.toggle("expanded");
+
         button.textContent = text.classList.contains("expanded")
           ? "Réduire"
           : "Voir tout";
@@ -147,13 +152,15 @@
 
     return `
       <article class="tk-slide ${index === 0 ? "active" : ""}" data-index="${index}">
-        <div class="tk-card-stars">${stars(reviewRating)}</div>
+        <div>
+          <div class="tk-card-stars">${stars(reviewRating)}</div>
 
-        <p class="tk-text ${isLong ? "is-long" : ""}">
-          “${escapeHtml(text)}”
-        </p>
+          <p class="tk-text ${isLong ? "is-long" : ""}">
+            “${escapeHtml(text)}”
+          </p>
 
-        ${isLong ? `<button class="tk-read-more" type="button">Voir tout</button>` : ""}
+          ${isLong ? `<button class="tk-read-more" type="button">Voir tout</button>` : ""}
+        </div>
 
         <div class="tk-author-row">
           <div>
@@ -171,6 +178,7 @@
     const slides = widget.querySelectorAll(".tk-slide");
     const current = Number(widget.dataset.current || 0);
     const nextIndex = (current + direction + slides.length) % slides.length;
+
     setActive(widget, nextIndex);
   }
 
@@ -186,36 +194,36 @@
     });
   }
 
-  function injectStyles({ fontFamily, accentColor, bgColor, textColor, radius }) {
-    if (document.getElementById("trustkit-styles")) return;
+  function injectStyles({ widgetUid, fontFamily, accentColor, bgColor, textColor, radius }) {
+    const existing = document.getElementById(`trustkit-styles-${widgetUid}`);
+    if (existing) existing.remove();
+
+    const softAccent = mixColors(accentColor, bgColor, 0.14);
+    const lightAccent = mixColors(accentColor, bgColor, 0.08);
+    const borderAccent = mixColors(accentColor, bgColor, 0.26);
+    const cardBg = mixColors(bgColor, "#ffffff", 0.72);
+    const shadowColor = hexToRgba(accentColor, 0.12);
 
     const style = document.createElement("style");
-    style.id = "trustkit-styles";
+    style.id = `trustkit-styles-${widgetUid}`;
 
     style.textContent = `
-      .tk-widget {
-        --tk-accent: ${accentColor};
-        --tk-bg: ${bgColor};
-        --tk-text: ${textColor};
-        --tk-radius: ${radius}px;
-        --tk-soft: color-mix(in srgb, var(--tk-accent) 10%, white);
-        --tk-border: color-mix(in srgb, var(--tk-accent) 22%, transparent);
-
+      #${widgetUid}.tk-widget {
         width: 100%;
         box-sizing: border-box;
         font-family: ${fontFamily};
-        color: var(--tk-text);
+        color: ${textColor};
         background:
-          radial-gradient(circle at top left, color-mix(in srgb, var(--tk-accent) 14%, transparent), transparent 36%),
-          var(--tk-bg);
-        border: 1px solid var(--tk-border);
-        border-radius: var(--tk-radius);
+          radial-gradient(circle at top left, ${softAccent}, transparent 38%),
+          linear-gradient(135deg, ${cardBg}, ${bgColor});
+        border: 1px solid ${borderAccent};
+        border-radius: ${Number(radius)}px;
         padding: 26px;
-        box-shadow: 0 22px 60px rgba(15, 23, 42, 0.10);
+        box-shadow: 0 22px 60px ${shadowColor};
         overflow: hidden;
       }
 
-      .tk-top {
+      #${widgetUid} .tk-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -223,37 +231,37 @@
         margin-bottom: 22px;
       }
 
-      .tk-brand {
+      #${widgetUid} .tk-brand {
         min-width: 0;
       }
 
-      .tk-badge {
+      #${widgetUid} .tk-badge {
         display: inline-flex;
         align-items: center;
         padding: 6px 10px;
         border-radius: 999px;
-        background: color-mix(in srgb, var(--tk-accent) 12%, white);
-        color: var(--tk-accent);
+        background: ${lightAccent};
+        color: ${accentColor};
         font-size: 0.75rem;
         font-weight: 800;
         margin-bottom: 10px;
       }
 
-      .tk-brand h3 {
+      #${widgetUid} .tk-brand h3 {
         margin: 0;
         font-size: clamp(1.15rem, 2vw, 1.45rem);
         line-height: 1.15;
         letter-spacing: -0.03em;
-        color: var(--tk-text);
+        color: ${textColor};
         text-align: left;
       }
 
-      .tk-score {
+      #${widgetUid} .tk-score {
         flex: 0 0 auto;
         text-align: right;
       }
 
-      .tk-score-main {
+      #${widgetUid} .tk-score-main {
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -261,94 +269,95 @@
         font-weight: 900;
       }
 
-      .tk-score-main > span:first-child {
+      #${widgetUid} .tk-score-main > span:first-child {
         font-size: 1.35rem;
-        color: var(--tk-text);
+        color: ${textColor};
       }
 
-      .tk-stars,
-      .tk-card-stars {
-        color: var(--tk-accent);
+      #${widgetUid} .tk-stars,
+      #${widgetUid} .tk-card-stars {
+        color: ${accentColor};
         letter-spacing: 1px;
         white-space: nowrap;
       }
 
-      .tk-total,
-      .tk-date {
+      #${widgetUid} .tk-total,
+      #${widgetUid} .tk-date {
         font-size: 0.83rem;
         opacity: 0.62;
       }
 
-      .tk-review-wrap {
+      #${widgetUid} .tk-review-wrap {
         display: grid;
         grid-template-columns: 44px 1fr 44px;
         gap: 14px;
         align-items: center;
       }
 
-      .tk-review-stage {
+      #${widgetUid} .tk-review-stage {
         position: relative;
         min-height: 250px;
       }
 
-      .tk-slide {
+      #${widgetUid} .tk-slide {
         display: none;
         min-height: 250px;
         box-sizing: border-box;
         padding: 24px;
-        border-radius: calc(var(--tk-radius) - 6px);
-        background: rgba(255,255,255,0.72);
+        border-radius: ${Math.max(Number(radius) - 6, 12)}px;
+        background: ${mixColors(bgColor, "#ffffff", 0.86)};
         border: 1px solid rgba(15, 23, 42, 0.08);
       }
 
-      .tk-slide.active {
+      #${widgetUid} .tk-slide.active {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        animation: tkFade .22s ease;
+        animation: tkFade-${widgetUid} .22s ease;
       }
 
-      @keyframes tkFade {
+      @keyframes tkFade-${widgetUid} {
         from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
       }
 
-      .tk-card-stars {
+      #${widgetUid} .tk-card-stars {
         font-size: 0.95rem;
         margin-bottom: 14px;
       }
 
-      .tk-text {
+      #${widgetUid} .tk-text {
         margin: 0;
         font-size: clamp(0.98rem, 1.5vw, 1.08rem);
         line-height: 1.65;
-        color: var(--tk-text);
+        color: ${textColor};
       }
 
-      .tk-text.is-long {
+      #${widgetUid} .tk-text.is-long {
         display: -webkit-box;
         -webkit-line-clamp: 5;
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
 
-      .tk-text.expanded {
+      #${widgetUid} .tk-text.expanded {
         display: block;
         overflow: visible;
       }
 
-      .tk-read-more {
+      #${widgetUid} .tk-read-more {
         align-self: flex-start;
         margin-top: 12px;
         padding: 0;
         background: transparent;
-        color: var(--tk-accent);
+        color: ${accentColor};
         border-radius: 0;
         font-size: 0.9rem;
         font-weight: 800;
+        cursor: pointer;
       }
 
-      .tk-author-row {
+      #${widgetUid} .tk-author-row {
         margin-top: 22px;
         display: flex;
         justify-content: space-between;
@@ -356,19 +365,19 @@
         gap: 16px;
       }
 
-      .tk-author {
-        color: var(--tk-text);
+      #${widgetUid} .tk-author {
+        color: ${textColor};
         font-weight: 850;
         text-decoration: none;
       }
 
-      .tk-arrow {
+      #${widgetUid} .tk-arrow {
         width: 44px;
         height: 44px;
         border-radius: 999px;
-        border: 1px solid color-mix(in srgb, var(--tk-accent) 22%, transparent);
-        background: color-mix(in srgb, var(--tk-accent) 10%, white);
-        color: var(--tk-accent);
+        border: 1px solid ${borderAccent};
+        background: ${lightAccent};
+        color: ${accentColor};
         font-size: 2rem;
         line-height: 1;
         display: inline-flex;
@@ -378,12 +387,12 @@
         transition: transform .18s ease, background .18s ease;
       }
 
-      .tk-arrow:hover {
+      #${widgetUid} .tk-arrow:hover {
         transform: translateY(-1px);
-        background: color-mix(in srgb, var(--tk-accent) 16%, white);
+        background: ${softAccent};
       }
 
-      .tk-bottom {
+      #${widgetUid} .tk-bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -391,34 +400,34 @@
         margin-top: 20px;
       }
 
-      .tk-dots {
+      #${widgetUid} .tk-dots {
         display: flex;
         gap: 7px;
         align-items: center;
       }
 
-      .tk-dot {
+      #${widgetUid} .tk-dot {
         width: 8px;
         height: 8px;
         padding: 0;
         border: 0;
         border-radius: 999px;
-        background: color-mix(in srgb, var(--tk-accent) 24%, white);
+        background: ${lightAccent};
         cursor: pointer;
       }
 
-      .tk-dot.active {
+      #${widgetUid} .tk-dot.active {
         width: 24px;
-        background: var(--tk-accent);
+        background: ${accentColor};
       }
 
-      .tk-google-link {
+      #${widgetUid} .tk-google-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 11px 16px;
         border-radius: 999px;
-        background: var(--tk-accent);
+        background: ${accentColor};
         color: white !important;
         text-decoration: none;
         font-size: 0.9rem;
@@ -426,47 +435,47 @@
         white-space: nowrap;
       }
 
-      .tk-loading {
+      [data-trustkit-id="${widgetUid}"] .tk-loading {
         font-family: ${fontFamily};
         opacity: 0.7;
       }
 
       @media (max-width: 760px) {
-        .tk-widget {
+        #${widgetUid}.tk-widget {
           padding: 20px;
         }
 
-        .tk-top {
+        #${widgetUid} .tk-top {
           flex-direction: column;
         }
 
-        .tk-score {
+        #${widgetUid} .tk-score {
           text-align: left;
         }
 
-        .tk-score-main {
+        #${widgetUid} .tk-score-main {
           justify-content: flex-start;
         }
 
-        .tk-review-wrap {
+        #${widgetUid} .tk-review-wrap {
           grid-template-columns: 1fr;
         }
 
-        .tk-arrow {
+        #${widgetUid} .tk-arrow {
           display: none;
         }
 
-        .tk-review-stage,
-        .tk-slide {
+        #${widgetUid} .tk-review-stage,
+        #${widgetUid} .tk-slide {
           min-height: 300px;
         }
 
-        .tk-bottom {
+        #${widgetUid} .tk-bottom {
           flex-direction: column;
           align-items: stretch;
         }
 
-        .tk-google-link {
+        #${widgetUid} .tk-google-link {
           width: 100%;
         }
       }
@@ -477,16 +486,17 @@
 
   function findAccentColor() {
     const candidates = document.querySelectorAll("a, button, [class*='button'], [class*='btn']");
+
     for (const el of candidates) {
       const styles = window.getComputedStyle(el);
       const bg = styles.backgroundColor;
       const color = styles.color;
 
       if (bg && !bg.includes("rgba(0, 0, 0, 0)") && bg !== "transparent") {
-        return bg;
+        return rgbToHex(bg) || bg;
       }
 
-      if (color) return color;
+      if (color) return rgbToHex(color) || color;
     }
 
     return null;
@@ -499,6 +509,7 @@
 
   function formatDate(value) {
     if (!value) return "";
+
     try {
       return new Intl.DateTimeFormat("fr-FR", {
         year: "numeric",
@@ -508,6 +519,70 @@
     } catch {
       return "";
     }
+  }
+
+  function mixColors(colorA, colorB, amount) {
+    const a = parseColor(colorA);
+    const b = parseColor(colorB);
+
+    if (!a || !b) return colorA;
+
+    const r = Math.round(a.r * amount + b.r * (1 - amount));
+    const g = Math.round(a.g * amount + b.g * (1 - amount));
+    const bValue = Math.round(a.b * amount + b.b * (1 - amount));
+
+    return rgbToHex(`rgb(${r}, ${g}, ${bValue})`);
+  }
+
+  function hexToRgba(hex, alpha) {
+    const rgb = parseColor(hex);
+
+    if (!rgb) return `rgba(15, 23, 42, ${alpha})`;
+
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+  }
+
+  function parseColor(color) {
+    if (!color) return null;
+
+    if (color.startsWith("#")) {
+      let hex = color.replace("#", "");
+
+      if (hex.length === 3) {
+        hex = hex.split("").map(c => c + c).join("");
+      }
+
+      if (hex.length !== 6) return null;
+
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16)
+      };
+    }
+
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+
+    if (!rgbMatch) return null;
+
+    return {
+      r: Number(rgbMatch[1]),
+      g: Number(rgbMatch[2]),
+      b: Number(rgbMatch[3])
+    };
+  }
+
+  function rgbToHex(rgb) {
+    const parsed = parseColor(rgb);
+
+    if (!parsed) return null;
+
+    return (
+      "#" +
+      [parsed.r, parsed.g, parsed.b]
+        .map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0"))
+        .join("")
+    );
   }
 
   function escapeHtml(value) {
