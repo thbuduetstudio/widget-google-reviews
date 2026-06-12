@@ -1,111 +1,192 @@
 (function () {
   const script = document.currentScript;
   const apiBase = new URL(script.src).origin;
-
   const containers = document.querySelectorAll("[data-google-reviews]");
 
-  containers.forEach(async function (container) {
-    const placeId = container.getAttribute("data-place-id");
-    const place = container.getAttribute("data-place");
+  containers.forEach(initWidget);
 
-    if (!placeId && !place) {
-      container.innerHTML = "Place ID ou nom d'établissement manquant.";
+  async function initWidget(container) {
+    const placeId = container.getAttribute("data-place-id");
+
+    if (!placeId) {
+      container.innerHTML = "Place ID manquant.";
       return;
     }
 
-    const bodyStyle = window.getComputedStyle(document.body);
-    const fontFamily = bodyStyle.fontFamily || "system-ui, sans-serif";
-    const textColor = bodyStyle.color || "#1f2937";
-    const bgColor = bodyStyle.backgroundColor || "#ffffff";
+    const computed = window.getComputedStyle(document.body);
 
-    const accentColor = findAccentColor() || textColor;
+    const accentColor =
+      container.getAttribute("data-accent-color") ||
+      findAccentColor() ||
+      "#2563eb";
 
-    container.innerHTML = `
-      <div class="tk-loading">Chargement des avis...</div>
-    `;
+    const bgColor =
+      container.getAttribute("data-bg-color") ||
+      "#ffffff";
 
-    injectStyles(fontFamily, textColor, bgColor, accentColor);
+    const textColor =
+      container.getAttribute("data-text-color") ||
+      computed.color ||
+      "#111827";
+
+    const radius =
+      container.getAttribute("data-radius") ||
+      "24";
+
+    injectStyles({
+      fontFamily: computed.fontFamily || "system-ui, sans-serif",
+      accentColor,
+      bgColor,
+      textColor,
+      radius
+    });
+
+    container.innerHTML = `<div class="tk-loading">Chargement des avis...</div>`;
 
     try {
-      const query = placeId
-        ? `place_id=${encodeURIComponent(placeId)}`
-        : `place=${encodeURIComponent(place)}`;
-      
-      const response = await fetch(`${apiBase}/api/reviews?${query}`);
+      const response = await fetch(
+        `${apiBase}/api/reviews?place_id=${encodeURIComponent(placeId)}`
+      );
 
       const data = await response.json();
 
-      if (!response.ok || !data.reviews) {
-        container.innerHTML = `
-          <pre style="white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:12px;color:#111;">
-      Erreur TrustKit :
-      ${JSON.stringify(data, null, 2)}
-          </pre>
-        `;
+      if (!response.ok || !data.reviews || !data.reviews.length) {
+        container.innerHTML = "";
         return;
       }
 
-      const reviews = data.reviews.slice(0, 5);
-      const businessName = data.displayName?.text || "";
-      const rating = data.rating || "";
-      const total = data.userRatingCount || "";
-      const mapsUrl = data.googleMapsUri || "#";
-
-      container.innerHTML = `
-        <section class="tk-widget">
-          <div class="tk-header">
-            <div>
-              <div class="tk-title">${escapeHtml(businessName)}</div>
-              <div class="tk-rating">
-                <span class="tk-stars">${stars(rating)}</span>
-                <span>${rating ? rating + " / 5" : ""}</span>
-              </div>
-              ${total ? `<div class="tk-total">Basé sur ${total} avis Google</div>` : ""}
-            </div>
-            <a class="tk-button" href="${mapsUrl}" target="_blank" rel="noopener">
-              Voir tous les avis
-            </a>
-          </div>
-
-          <div class="tk-carousel">
-            ${reviews
-              .map(function (review) {
-                const author = review.authorAttribution?.displayName || "Client Google";
-                const authorUrl = review.authorAttribution?.uri || "#";
-                const reviewRating = review.rating || 5;
-                const text = review.text?.text || "";
-                const date = formatDate(review.publishTime);
-
-                return `
-                  <article class="tk-card">
-                    <div class="tk-card-stars">${stars(reviewRating)}</div>
-                    <p class="tk-text">“${escapeHtml(text)}”</p>
-                    <div class="tk-author">
-                      <a href="${authorUrl}" target="_blank" rel="noopener">
-                        ${escapeHtml(author)}
-                      </a>
-                    </div>
-                    ${date ? `<div class="tk-date">${date}</div>` : ""}
-                  </article>
-                `;
-              })
-              .join("")}
-          </div>
-
-          <div class="tk-google">Avis fournis par Google</div>
-        </section>
-      `;
+      renderWidget(container, data);
     } catch (error) {
-      container.innerHTML = `
-        <pre style="white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:12px;color:#111;">
-      Erreur TrustKit :
-      ${error.message}
-        </pre>
-      `;
+      container.innerHTML = "";
     }
-  });
+  }
 
-  function injectStyles(fontFamily, textColor, bgColor, accentColor) {
+  function renderWidget(container, data) {
+    const reviews = data.reviews.slice(0, 5);
+    const businessName = data.displayName?.text || "";
+    const rating = data.rating || "";
+    const total = data.userRatingCount || "";
+    const mapsUrl = data.googleMapsUri || "#";
+    const widgetId = "tk-" + Math.random().toString(36).slice(2);
+
+    container.innerHTML = `
+      <section class="tk-widget" id="${widgetId}" data-current="0">
+        <div class="tk-top">
+          <div class="tk-brand">
+            <div class="tk-badge">Avis Google</div>
+            <h3>${escapeHtml(businessName)}</h3>
+          </div>
+
+          <div class="tk-score">
+            <div class="tk-score-main">
+              <span>${rating ? rating.toFixed ? rating.toFixed(1) : rating : ""}</span>
+              <span class="tk-stars">${stars(rating)}</span>
+            </div>
+            ${total ? `<div class="tk-total">${total} avis</div>` : ""}
+          </div>
+        </div>
+
+        <div class="tk-review-wrap">
+          <button class="tk-arrow tk-prev" type="button" aria-label="Avis précédent">‹</button>
+
+          <div class="tk-review-stage">
+            ${reviews.map((review, index) => renderReview(review, index)).join("")}
+          </div>
+
+          <button class="tk-arrow tk-next" type="button" aria-label="Avis suivant">›</button>
+        </div>
+
+        <div class="tk-bottom">
+          <div class="tk-dots">
+            ${reviews.map((_, index) => `
+              <button class="tk-dot ${index === 0 ? "active" : ""}" type="button" data-index="${index}"></button>
+            `).join("")}
+          </div>
+
+          <a class="tk-google-link" href="${mapsUrl}" target="_blank" rel="noopener">
+            Voir tous les avis
+          </a>
+        </div>
+      </section>
+    `;
+
+    const widget = container.querySelector(".tk-widget");
+    const prev = container.querySelector(".tk-prev");
+    const next = container.querySelector(".tk-next");
+    const dots = container.querySelectorAll(".tk-dot");
+
+    prev.addEventListener("click", () => move(widget, -1));
+    next.addEventListener("click", () => move(widget, 1));
+
+    dots.forEach(dot => {
+      dot.addEventListener("click", () => {
+        setActive(widget, Number(dot.dataset.index));
+      });
+    });
+
+    container.querySelectorAll(".tk-read-more").forEach(button => {
+      button.addEventListener("click", () => {
+        const text = button.previousElementSibling;
+        text.classList.toggle("expanded");
+        button.textContent = text.classList.contains("expanded")
+          ? "Réduire"
+          : "Voir tout";
+      });
+    });
+
+    setActive(widget, 0);
+  }
+
+  function renderReview(review, index) {
+    const author = review.authorAttribution?.displayName || "Client Google";
+    const authorUrl = review.authorAttribution?.uri || "#";
+    const reviewRating = review.rating || 5;
+    const text = review.text?.text || "";
+    const date = formatDate(review.publishTime);
+    const isLong = text.length > 220;
+
+    return `
+      <article class="tk-slide ${index === 0 ? "active" : ""}" data-index="${index}">
+        <div class="tk-card-stars">${stars(reviewRating)}</div>
+
+        <p class="tk-text ${isLong ? "is-long" : ""}">
+          “${escapeHtml(text)}”
+        </p>
+
+        ${isLong ? `<button class="tk-read-more" type="button">Voir tout</button>` : ""}
+
+        <div class="tk-author-row">
+          <div>
+            <a class="tk-author" href="${authorUrl}" target="_blank" rel="noopener">
+              ${escapeHtml(author)}
+            </a>
+            ${date ? `<div class="tk-date">${date}</div>` : ""}
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function move(widget, direction) {
+    const slides = widget.querySelectorAll(".tk-slide");
+    const current = Number(widget.dataset.current || 0);
+    const nextIndex = (current + direction + slides.length) % slides.length;
+    setActive(widget, nextIndex);
+  }
+
+  function setActive(widget, index) {
+    widget.dataset.current = index;
+
+    widget.querySelectorAll(".tk-slide").forEach(slide => {
+      slide.classList.toggle("active", Number(slide.dataset.index) === index);
+    });
+
+    widget.querySelectorAll(".tk-dot").forEach(dot => {
+      dot.classList.toggle("active", Number(dot.dataset.index) === index);
+    });
+  }
+
+  function injectStyles({ fontFamily, accentColor, bgColor, textColor, radius }) {
     if (document.getElementById("trustkit-styles")) return;
 
     const style = document.createElement("style");
@@ -113,116 +194,236 @@
 
     style.textContent = `
       .tk-widget {
-        font-family: ${fontFamily};
-        color: ${textColor};
+        --tk-accent: ${accentColor};
+        --tk-bg: ${bgColor};
+        --tk-text: ${textColor};
+        --tk-radius: ${radius}px;
+        --tk-soft: color-mix(in srgb, var(--tk-accent) 10%, white);
+        --tk-border: color-mix(in srgb, var(--tk-accent) 22%, transparent);
+
         width: 100%;
         box-sizing: border-box;
-        padding: 24px;
-        border-radius: 24px;
-        background: rgba(255,255,255,0.72);
-        border: 1px solid rgba(0,0,0,0.08);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-        backdrop-filter: blur(10px);
+        font-family: ${fontFamily};
+        color: var(--tk-text);
+        background:
+          radial-gradient(circle at top left, color-mix(in srgb, var(--tk-accent) 14%, transparent), transparent 36%),
+          var(--tk-bg);
+        border: 1px solid var(--tk-border);
+        border-radius: var(--tk-radius);
+        padding: 26px;
+        box-shadow: 0 22px 60px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
       }
 
-      .tk-header {
+      .tk-top {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 20px;
-        align-items: flex-start;
         margin-bottom: 22px;
       }
 
-      .tk-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 6px;
+      .tk-brand {
+        min-width: 0;
       }
 
-      .tk-rating {
+      .tk-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--tk-accent) 12%, white);
+        color: var(--tk-accent);
+        font-size: 0.75rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+      }
+
+      .tk-brand h3 {
+        margin: 0;
+        font-size: clamp(1.15rem, 2vw, 1.45rem);
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        color: var(--tk-text);
+        text-align: left;
+      }
+
+      .tk-score {
+        flex: 0 0 auto;
+        text-align: right;
+      }
+
+      .tk-score-main {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 8px;
-        font-weight: 600;
+        font-weight: 900;
+      }
+
+      .tk-score-main > span:first-child {
+        font-size: 1.35rem;
+        color: var(--tk-text);
       }
 
       .tk-stars,
       .tk-card-stars {
-        color: ${accentColor};
+        color: var(--tk-accent);
         letter-spacing: 1px;
         white-space: nowrap;
       }
 
       .tk-total,
-      .tk-date,
-      .tk-google {
-        font-size: 0.85rem;
-        opacity: 0.68;
+      .tk-date {
+        font-size: 0.83rem;
+        opacity: 0.62;
       }
 
-      .tk-button {
-        display: inline-flex;
+      .tk-review-wrap {
+        display: grid;
+        grid-template-columns: 44px 1fr 44px;
+        gap: 14px;
         align-items: center;
-        justify-content: center;
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: ${accentColor};
-        color: white !important;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 600;
-        white-space: nowrap;
-        transition: transform 0.2s ease, opacity 0.2s ease;
       }
 
-      .tk-button:hover {
-        transform: translateY(-1px);
-        opacity: 0.92;
+      .tk-review-stage {
+        position: relative;
+        min-height: 250px;
       }
 
-      .tk-carousel {
-        display: flex;
-        gap: 16px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        padding-bottom: 10px;
-      }
-
-      .tk-carousel::-webkit-scrollbar {
-        height: 6px;
-      }
-
-      .tk-carousel::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,0.18);
-        border-radius: 999px;
-      }
-
-      .tk-card {
-        flex: 0 0 calc(33.333% - 12px);
-        min-width: 260px;
-        scroll-snap-align: start;
+      .tk-slide {
+        display: none;
+        min-height: 250px;
         box-sizing: border-box;
-        padding: 18px;
-        border-radius: 20px;
-        background: rgba(255,255,255,0.78);
-        border: 1px solid rgba(0,0,0,0.08);
+        padding: 24px;
+        border-radius: calc(var(--tk-radius) - 6px);
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .tk-slide.active {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        animation: tkFade .22s ease;
+      }
+
+      @keyframes tkFade {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .tk-card-stars {
+        font-size: 0.95rem;
+        margin-bottom: 14px;
       }
 
       .tk-text {
-        font-size: 0.95rem;
-        line-height: 1.5;
-        margin: 12px 0 16px;
+        margin: 0;
+        font-size: clamp(0.98rem, 1.5vw, 1.08rem);
+        line-height: 1.65;
+        color: var(--tk-text);
       }
 
-      .tk-author a {
-        color: inherit;
-        font-weight: 700;
+      .tk-text.is-long {
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .tk-text.expanded {
+        display: block;
+        overflow: visible;
+      }
+
+      .tk-read-more {
+        align-self: flex-start;
+        margin-top: 12px;
+        padding: 0;
+        background: transparent;
+        color: var(--tk-accent);
+        border-radius: 0;
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      .tk-author-row {
+        margin-top: 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+      }
+
+      .tk-author {
+        color: var(--tk-text);
+        font-weight: 850;
         text-decoration: none;
       }
 
-      .tk-google {
-        margin-top: 12px;
-        text-align: right;
+      .tk-arrow {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--tk-accent) 22%, transparent);
+        background: color-mix(in srgb, var(--tk-accent) 10%, white);
+        color: var(--tk-accent);
+        font-size: 2rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease;
+      }
+
+      .tk-arrow:hover {
+        transform: translateY(-1px);
+        background: color-mix(in srgb, var(--tk-accent) 16%, white);
+      }
+
+      .tk-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .tk-dots {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+
+      .tk-dot {
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--tk-accent) 24%, white);
+        cursor: pointer;
+      }
+
+      .tk-dot.active {
+        width: 24px;
+        background: var(--tk-accent);
+      }
+
+      .tk-google-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 16px;
+        border-radius: 999px;
+        background: var(--tk-accent);
+        color: white !important;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 850;
+        white-space: nowrap;
       }
 
       .tk-loading {
@@ -230,26 +431,43 @@
         opacity: 0.7;
       }
 
-      @media (max-width: 800px) {
+      @media (max-width: 760px) {
         .tk-widget {
-          padding: 18px;
-          border-radius: 20px;
+          padding: 20px;
         }
 
-        .tk-header {
+        .tk-top {
           flex-direction: column;
         }
 
-        .tk-card {
-          flex-basis: 86%;
-        }
-
-        .tk-button {
-          width: 100%;
-        }
-
-        .tk-google {
+        .tk-score {
           text-align: left;
+        }
+
+        .tk-score-main {
+          justify-content: flex-start;
+        }
+
+        .tk-review-wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .tk-arrow {
+          display: none;
+        }
+
+        .tk-review-stage,
+        .tk-slide {
+          min-height: 300px;
+        }
+
+        .tk-bottom {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tk-google-link {
+          width: 100%;
         }
       }
     `;
@@ -293,7 +511,7 @@
   }
 
   function escapeHtml(value) {
-    return String(value)
+    return String(value || "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
