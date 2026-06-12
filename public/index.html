@@ -367,6 +367,15 @@
 
           <button class="secondary" onclick="extractTheme()">Analyser les couleurs</button>
 
+          <div class="field" style="margin-top:16px;">
+            <label>Appliquer la couleur sélectionnée à</label>
+            <select id="colorTarget" style="width:100%;padding:15px 16px;border-radius:16px;border:1px solid rgba(0,0,0,.12);">
+              <option value="accentColor">Couleur principale</option>
+              <option value="bgColor">Fond</option>
+              <option value="textColor">Texte</option>
+            </select>
+          </div>
+          
           <div id="swatches" class="swatches"></div>
 
           <div class="theme-grid" style="margin-top:18px;">
@@ -570,14 +579,15 @@
       swatches.innerHTML = data.colors.map(color => {
         const hex = normalizeHex(color);
         if (!hex) return "";
-        return `<button class="swatch" style="background:${hex}" onclick="setAccent('${hex}')"></button>`;
+        return `<button class="swatch" title="${hex}" style="background:${hex}" onclick="setAccent('${hex}')"></button>`;
       }).join("");
 
       refreshOutput();
     }
 
     function setAccent(color) {
-      document.getElementById("accentColor").value = color;
+      const target = document.getElementById("colorTarget")?.value || "accentColor";
+      document.getElementById(target).value = color;
       refreshOutput();
     }
 
