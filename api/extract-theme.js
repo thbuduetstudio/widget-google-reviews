@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       ...colorMatches
     ]);
 
-    const accent = ranked[0] || "#717254";
+    const accent = ranked[0] || "#2563eb";
     const text = isDarkColor(accent) ? "#222222" : "#1f1f1f";
     const bg = "#ffffff";
 
